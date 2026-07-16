@@ -3,8 +3,8 @@
 import { useState, type SubmitEvent } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { Loader2Icon } from "lucide-react"
-
+import { Loader2Icon, Mail, Lock, Eye, EyeOff } from "lucide-react"
+import { useRouter } from "next/navigation";
 import loginArt from "@/assets/login.png"
 import logo from "@/assets/logo.svg"
 import { Button } from "@/components/ui/button"
@@ -15,6 +15,12 @@ import { Separator } from "@/components/ui/separator"
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const MIN_PASSWORD_LENGTH = 8
+
+const STATS = [
+  { value: "10K+", label: "Users" },
+  { value: "5K+", label: "Workouts" },
+  { value: "98%", label: "Satisfied" },
+]
 
 type Errors = {
   email?: string
@@ -76,10 +82,11 @@ function FacebookIcon() {
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
   const [errors, setErrors] = useState<Errors>({})
   const [submitted, setSubmitted] = useState(false)
   const [pending, setPending] = useState(false)
-
+  const router = useRouter()
   // Once a submit has failed, re-check on every keystroke so errors clear as
   // soon as the user fixes them.
   function revalidate(nextEmail: string, nextPassword: string) {
@@ -93,11 +100,32 @@ export default function LoginPage() {
     const nextErrors = validate(email, password)
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length > 0) return
+    setPending(true);
 
-    setPending(true)
-    // TODO: replace with the real sign-in call once auth is wired up.
-    await new Promise((resolve) => setTimeout(resolve, 800))
-    setPending(false)
+try {
+  const response = await fetch("/api/login", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      email,
+      password,
+    }),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    alert(data.message);
+    return;
+  }
+
+    console.log(data);
+    router.push("/dashboard");
+} finally {
+  setPending(false);
+}
   }
 
   return (
@@ -160,21 +188,27 @@ export default function LoginPage() {
                 <Label htmlFor="email" className="sr-only">
                   Email
                 </Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  placeholder="Email"
-                  value={email}
-                  aria-invalid={Boolean(errors.email)}
-                  aria-describedby={errors.email ? "email-error" : undefined}
-                  onChange={(event) => {
-                    setEmail(event.target.value)
-                    revalidate(event.target.value, password)
-                  }}
-                  className="h-11 rounded-xl bg-white px-3.5"
-                />
+                <div className="relative">
+                  <Mail
+                    aria-hidden="true"
+                    className="pointer-events-none absolute left-3.5 top-1/2 size-[18px] -translate-y-1/2 text-muted-foreground"
+                  />
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    placeholder="Email"
+                    value={email}
+                    aria-invalid={Boolean(errors.email)}
+                    aria-describedby={errors.email ? "email-error" : undefined}
+                    onChange={(event) => {
+                      setEmail(event.target.value)
+                      revalidate(event.target.value, password)
+                    }}
+                    className="h-11 rounded-xl bg-white pl-10 pr-3.5"
+                  />
+                </div>
                 {errors.email ? (
                   <p id="email-error" className="text-xs text-destructive">
                     {errors.email}
@@ -186,23 +220,41 @@ export default function LoginPage() {
                 <Label htmlFor="password" className="sr-only">
                   Password
                 </Label>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  placeholder="Password"
-                  value={password}
-                  aria-invalid={Boolean(errors.password)}
-                  aria-describedby={
-                    errors.password ? "password-error" : undefined
-                  }
-                  onChange={(event) => {
-                    setPassword(event.target.value)
-                    revalidate(email, event.target.value)
-                  }}
-                  className="h-11 rounded-xl bg-white px-3.5"
-                />
+                <div className="relative">
+                  <Lock
+                    aria-hidden="true"
+                    className="pointer-events-none absolute left-3.5 top-1/2 size-[18px] -translate-y-1/2 text-muted-foreground"
+                  />
+                  <Input
+                    id="password"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    autoComplete="current-password"
+                    placeholder="Password"
+                    value={password}
+                    aria-invalid={Boolean(errors.password)}
+                    aria-describedby={
+                      errors.password ? "password-error" : undefined
+                    }
+                    onChange={(event) => {
+                      setPassword(event.target.value)
+                      revalidate(email, event.target.value)
+                    }}
+                    className="h-11 rounded-xl bg-white pl-10 pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((value) => !value)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="size-[18px]" />
+                    ) : (
+                      <Eye className="size-[18px]" />
+                    )}
+                  </button>
+                </div>
                 {errors.password ? (
                   <p id="password-error" className="text-xs text-destructive">
                     {errors.password}
@@ -255,7 +307,7 @@ export default function LoginPage() {
         </footer>
       </div>
 
-      <div className="relative hidden items-center justify-center overflow-hidden bg-linear-to-br from-accent/8 via-main/60 to-accent/16 lg:flex">
+      <div className="relative hidden flex-col items-center justify-center gap-1 overflow-hidden bg-linear-to-br from-accent/8 via-main/60 to-accent/16 px-4 py-4 lg:flex">
         <div
           aria-hidden="true"
           className="pointer-events-none absolute -top-32 -right-24 size-112 rounded-full bg-accent/10 blur-3xl"
@@ -264,14 +316,40 @@ export default function LoginPage() {
           aria-hidden="true"
           className="pointer-events-none absolute -bottom-32 -left-24 size-112 rounded-full bg-accent/8 blur-3xl"
         />
-        <Image
-          src={loginArt}
-          alt="A PulseFit member surrounded by their training, recovery and progress stats"
-          placeholder="blur"
-          priority
-          sizes="50vw"
-          className="relative max-h-[85svh] w-full max-w-xl object-contain p-12"
-        />
+
+        <div className="relative flex w-full flex-1 items-center justify-center">
+          <Image
+            src={loginArt}
+            alt="A PulseFit member surrounded by their training, recovery and progress stats"
+            placeholder="blur"
+            priority
+            sizes="50vw"
+            className="max-h-[86svh] w-full max-w-2xl object-contain"
+          />
+        </div>
+
+        <div className="relative w-full max-w-md text-center">
+          <h2 className="font-heading text-3xl tracking-tight">
+            Transform Your Fitness Journey
+          </h2>
+          <p className="mt-3 text-sm text-muted-foreground">
+            Track workouts, monitor progress, and achieve your goals with
+            PulseFit
+          </p>
+
+          <dl className="mt-8 grid grid-cols-3 gap-4">
+            {STATS.map((stat) => (
+              <div key={stat.label} className="flex flex-col items-center">
+                <dt className="font-heading text-2xl tracking-tight text-accent">
+                  {stat.value}
+                </dt>
+                <dd className="mt-1 text-xs text-muted-foreground">
+                  {stat.label}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </div>
       </div>
     </main>
   )
