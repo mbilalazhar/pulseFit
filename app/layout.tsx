@@ -1,15 +1,14 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Roboto } from "next/font/google";
 import "./globals.css";
+import { GlassNavbar } from "@/components/navbar";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// Configure Roboto font
+const roboto = Roboto({
+  weight: ["400", "500", "700"], // Regular, Medium, and Bold weights
+  variable: "--font-roboto",     // CSS variable to pass to Tailwind
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -23,11 +22,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col">{children}</body>
+    <html lang="en" className={`${roboto.variable} h-full antialiased`}>
+      <body className="flex min-h-full flex-col">
+        <GlassNavbar />
+        {children}
+      </body>
     </html>
   );
 }
