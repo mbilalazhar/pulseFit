@@ -13,7 +13,7 @@ type NavItem = {
 }
 
 const navItems: NavItem[] = [
-  { label: "Home", href: "#" },
+  { label: "Home", href: "/" },
   { label: "Solutions", href: "#", hasDropdown: true },
   { label: "Clients", href: "#", hasDropdown: true },
   { label: "Pricing", href: "#" },
@@ -25,8 +25,8 @@ export function GlassNavbar() {
   const [open, setOpen] = useState(false)
 
   return (
-    <header className=" mx-20 sticky top-0 z-50 border-b border-black/5 bg-white/80 shadow-lg shadow-black/5 backdrop-blur-xl backdrop-saturate-150 supports-[backdrop-filter]:bg-white/60">
-      <nav className="relative mx-auto h-16 max-w-7xl px-4 sm:px-6 lg:px-8">
+    <header className=" mx-20 mt-4 rounded-lg sticky top-0 z-50 border-b border-black/5 bg-white/80 shadow-lg shadow-black/5 backdrop-blur-xl backdrop-saturate-150 supports-[backdrop-filter]:bg-white/60">
+      <nav className="relative mx-auto h-16 max-w-7xl px-4 sm:px-6 lg:px-8 rounded-lg border-black">
         {/* Subtle top highlight for the glass edge */}
         <span
           aria-hidden
