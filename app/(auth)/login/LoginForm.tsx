@@ -3,11 +3,14 @@
 import { useState, type FormEvent } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Loader2Icon, Mail, Lock, Eye, EyeOff } from "lucide-react"
+import { useMutation } from "@tanstack/react-query"
+import { toast } from "sonner"
+import { Loader2Icon, Mail, Lock, Eye, EyeOff, OctagonAlert } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { login } from "@/lib/services/auth.services"
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const MIN_PASSWORD_LENGTH = 8
@@ -42,7 +45,14 @@ export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [errors, setErrors] = useState<Errors>({})
   const [submitted, setSubmitted] = useState(false)
-  const [pending, setPending] = useState(false)
+
+  const mutation = useMutation({
+    mutationFn: login,
+    onSuccess: () => {
+      toast.success("Signed in successfully. Redirecting to your dashboard...")
+      router.push("/dashboard")
+    },
+  })
 
   // Once a submit has failed, re-check on every keystroke so errors clear as
   // soon as the user fixes them.
@@ -50,7 +60,7 @@ export function LoginForm() {
     if (submitted) setErrors(validate(nextEmail, nextPassword))
   }
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setSubmitted(true)
 
@@ -58,30 +68,21 @@ export function LoginForm() {
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length > 0) return
 
-    setPending(true)
-    try {
-      const response = await fetch("/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        alert(data.message)
-        return
-      }
-
-      console.log(data)
-      router.push("/dashboard")
-    } finally {
-      setPending(false)
-    }
+    mutation.mutate({ email, password })
   }
 
   return (
     <form noValidate onSubmit={handleSubmit} className="w-full">
+      {mutation.isError ? (
+        <div
+          role="alert"
+          className="mb-4 flex items-start gap-2.5 rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive"
+        >
+          <OctagonAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+          <span>{mutation.error.message}</span>
+        </div>
+      ) : null}
+
       <div className="space-y-4">
         <div className="space-y-1.5">
           <Label htmlFor="email" className="sr-only">
@@ -179,10 +180,10 @@ export function LoginForm() {
       <Button
         type="submit"
         size="lg"
-        disabled={pending}
+        disabled={mutation.isPending}
         className="mt-7 h-11 w-full rounded-xl text-sm"
       >
-        {pending ? (
+        {mutation.isPending ? (
           <>
             <Loader2Icon className="animate-spin" />
             Signing in

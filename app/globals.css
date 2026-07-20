@@ -13,6 +13,10 @@
   /* Set your light grays for text */
   --color-main: #EEEEEE;
   --color-outline: #DDDDDD;
+
+  /* Feedback colors (password strength, form states) */
+  --color-warning: #CA8A04;
+  --color-success: #16A34A;
 }
 
 @theme inline {

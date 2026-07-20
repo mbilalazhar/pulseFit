@@ -25,14 +25,8 @@ export function GlassNavbar() {
   const [open, setOpen] = useState(false)
 
   return (
-    <header className=" mx-20 mt-4 rounded-lg sticky top-0 z-50 border-b border-black/5 bg-white/80 shadow-lg shadow-black/5 backdrop-blur-xl backdrop-saturate-150 supports-[backdrop-filter]:bg-white/60">
+    <header className=" mx-auto my-4 rounded-full sticky top-0 z-50 bg-main">
       <nav className="relative mx-auto h-16 max-w-7xl px-4 sm:px-6 lg:px-8 rounded-lg border-black">
-        {/* Subtle top highlight for the glass edge */}
-        <span
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-white/70 to-transparent"
-        />
-
         <div className="relative z-10 flex h-full items-center gap-6">
           {/* Logo */}
           <Link href="/" aria-label="Home" className="flex shrink-0 items-center">
@@ -87,7 +81,7 @@ export function GlassNavbar() {
 
       {/* Mobile menu */}
       {open ? (
-        <div className="border-t border-black/5 bg-white/90 px-4 py-4 backdrop-blur-xl backdrop-saturate-150 lg:hidden">
+        <div className="border-t border-black/5 bg-main px-4 py-4 lg:hidden">
           <ul className="space-y-1">
             {navItems.map((item) => (
               <li key={item.label}>

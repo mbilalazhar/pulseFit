@@ -1,27 +1,28 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import bcrypt from "bcrypt";
 
 export async function POST(req: Request) {
   try {
     const { email, password } = await req.json();
 
+    // Signup stores the email normalized, so look it up the same way.
     const user = await prisma.user.findUnique({
       where: {
-        email,
+        email: String(email).toLowerCase().trim(),
       },
     });
 
-    if (!user) {
-      return NextResponse.json(
-        { message: "User not found" },
-        { status: 404 }
-      );
-    }
+    // Unknown email and wrong password answer identically, so the response
+    // can't be used to discover which emails have accounts.
+    // Stored passwords are bcrypt hashes, so they must be compared, not equated.
+    const passwordMatches = user
+      ? await bcrypt.compare(password, user.password)
+      : false;
 
-    // TEMPORARY (plain text comparison)
-    if (user.password !== password) {
+    if (!user || !passwordMatches) {
       return NextResponse.json(
-        { message: "Incorrect password" },
+        { message: "Invalid credentials. Please try again." },
         { status: 401 }
       );
     }
@@ -31,7 +32,6 @@ export async function POST(req: Request) {
         message: "Login successful",
         user: {
           id: user.id,
-          fullName: user.fullName,
           email: user.email,
         },
       },

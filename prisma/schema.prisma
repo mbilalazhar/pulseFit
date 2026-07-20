@@ -11,11 +11,63 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
-model User {
-  id        String   @id @default(cuid())
-  fullName  String
-  email     String   @unique
-  password  String
-  createdAt DateTime @default(now())
+enum GymStatus {
+  ACTIVE
+  INACTIVE
 }
-model admin
+
+enum Role {
+  ADMIN
+  TRAINER
+  MEMBER
+}
+
+enum Tier {
+  BASIC
+  PRO
+  PREMIUM
+}
+
+enum SubscriptionStatus {
+  TRIAL
+  ACTIVE
+}
+
+model Gym {
+  id               String    @id @default(cuid())
+  organizationName String    @unique
+  slug             String    @unique
+  timeZone         String    @default("Asia/Karachi")
+  status           GymStatus @default(ACTIVE)
+  createdAt        DateTime  @default(now())
+
+  users         User[]
+  subscriptions GymSubscription[]
+}
+
+model User {
+  id       String @id @default(cuid())
+  gymId    String
+  email    String @unique
+  password String
+  role     Role
+
+  gym Gym @relation(fields: [gymId], references: [id])
+
+  @@index([gymId, role])
+}
+
+model GymSubscription {
+  id          String             @id @default(cuid())
+  gymId       String
+  tier        Tier
+  memberLimit Int
+  price       Int
+  status      SubscriptionStatus @default(TRIAL)
+  startDate   DateTime           @default(now())
+  endDate     DateTime
+
+  gym Gym @relation(fields: [gymId], references: [id])
+
+  @@index([gymId, status])
+}
