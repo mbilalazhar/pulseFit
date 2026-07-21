@@ -4,7 +4,7 @@ export default function LoadingOverlay() {
       role="status"
       aria-label="Loading"
       aria-live="polite"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-white/10 backdrop-blur-xl"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-white/70 backdrop-blur-xl"
     >
       <div className="flex flex-col items-center gap-8">
         {/* Logo Animation */}
