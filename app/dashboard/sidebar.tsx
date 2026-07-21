@@ -5,6 +5,20 @@ import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
+import { useMutation } from "@tanstack/react-query"
+import { useRouter } from "next/navigation"
+import { logout } from "../../lib/services/auth.services"
+import { toast } from "sonner"
+import LoadingOverlay from "@/components/LoadingOverlay"
+import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import {
   Home,
   Users,
@@ -80,7 +94,29 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
 export function Sidebar() {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
+  const router = useRouter();
+  const [logoutError, setLogoutError] = useState(false)
 
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      await new Promise((resolve) => setTimeout(resolve, 5000))
+      return logout()
+    },
+    onSuccess: () => {
+      // Toaster lives in the root layout, so the toast survives the redirect.
+      toast.success("Logged out successfully.")
+      router.push("/login")
+      router.refresh();
+    },
+    onError: () => {
+      setLogoutError(true)
+    },
+  })
+
+  function handleLogout() {
+    if (logoutMutation.isPending) return
+    logoutMutation.mutate()
+  }
   // Close the mobile drawer whenever the route changes.
   useEffect(() => {
     setOpen(false)
@@ -106,11 +142,6 @@ export function Sidebar() {
     }
     return best
   }, [pathname])
-
-  function handleLogout() {
-    // TODO: call your logout endpoint / clear the session, then redirect.
-  }
-
   return (
     <>
       {/* Mobile trigger — sits where the sidebar would be, below lg only */}
@@ -193,6 +224,34 @@ export function Sidebar() {
           </button>
         </div>
       </aside>
+
+      {/* Full-screen loading state while logging out (3s hold + request) */}
+      {logoutMutation.isPending ? <LoadingOverlay /> : null}
+
+      {/* Error modal shown when the logout request fails */}
+      <Dialog open={logoutError} onOpenChange={setLogoutError}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Logout failed</DialogTitle>
+            <DialogDescription>
+              Error while logging out please try again later...
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setLogoutError(false)}>
+              Dismiss
+            </Button>
+            <Button
+              onClick={() => {
+                setLogoutError(false)
+                logoutMutation.mutate()
+              }}
+            >
+              Try again
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }
