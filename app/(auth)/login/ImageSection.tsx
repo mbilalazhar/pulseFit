@@ -1,11 +1,11 @@
 import Image from "next/image";
-import loginArt from "@/assets/login.png";
+import loginArt from "@/assets/login1-blended.png";
 
 export default function ImageSection() {
   return (
-    <div className="relative hidden overflow-hidden bg-linear-to-br from-accent/8 via-main/60 to-accent/16 lg:flex lg:items-center lg:justify-center">
+    <div className="relative hidden overflow-hidden lg:flex lg:items-center lg:justify-center">
       {/* Background Blobs */}
-      <div
+      {/* <div
         aria-hidden="true"
         className="pointer-events-none absolute -top-32 -right-24 h-112 w-md rounded-full bg-accent/10 blur-3xl"
       />
@@ -13,7 +13,7 @@ export default function ImageSection() {
       <div
         aria-hidden="true"
         className="pointer-events-none absolute -bottom-32 -left-24 h-112 w-md rounded-full bg-accent/8 blur-3xl"
-      />
+      /> */}
 
       {/* Main Content */}
       <div className="relative flex h-full w-full flex-col items-center justify-center px-10 py-10">

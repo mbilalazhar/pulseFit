@@ -5,17 +5,11 @@ import bcrypt from "bcrypt";
 export async function POST(req: Request) {
   try {
     const { email, password } = await req.json();
-
-    // Signup stores the email normalized, so look it up the same way.
     const user = await prisma.user.findUnique({
       where: {
         email: String(email).toLowerCase().trim(),
       },
     });
-
-    // Unknown email and wrong password answer identically, so the response
-    // can't be used to discover which emails have accounts.
-    // Stored passwords are bcrypt hashes, so they must be compared, not equated.
     const passwordMatches = user
       ? await bcrypt.compare(password, user.password)
       : false;

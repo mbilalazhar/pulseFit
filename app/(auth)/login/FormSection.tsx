@@ -48,7 +48,7 @@ function FacebookIcon() {
 
 export default function FormSection() {
   return (
-    <div className="flex min-h-0 flex-col bg-linear-to-b from-white to-main/50 px-6 py-8 lg:px-12">
+    <div className="flex min-h-0 flex-col px-6 py-8 lg:px-12">
         <header className="flex items-center justify-between gap-4">
           <Link href="/" aria-label="PulseFit home">
             <Image src={logo} alt="PulseFit" priority className="h-6 w-auto" />

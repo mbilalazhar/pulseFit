@@ -14,6 +14,10 @@
   --color-main: #EEEEEE;
   --color-outline: #DDDDDD;
 
+  /* Auth canvas — matches the login artwork's background so the page and
+     image read as one continuous surface. */
+  --color-canvas: #F3F3F5;
+
   /* Feedback colors (password strength, form states) */
   --color-warning: #CA8A04;
   --color-success: #16A34A;
