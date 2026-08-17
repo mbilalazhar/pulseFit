@@ -1,0 +1,40 @@
+enum MemberSubStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
+model MemberSubscription {
+  id         String          @id @default(cuid())
+  gymId      String
+  memberId   String
+  planId     String
+  priceMinor Int
+  startDate  DateTime
+  endDate    DateTime
+  status     MemberSubStatus @default(ACTIVE)
+  createdAt  DateTime        @default(now())
+
+  gym    Gym    @relation(fields: [gymId], references: [id])
+  member Member @relation(fields: [memberId], references: [id])
+  plan   Plan   @relation(fields: [planId], references: [id])
+
+  @@index([gymId, status, endDate])
+  @@index([gymId, memberId])
+}
+
+model Payment {
+  id          String   @id @default(cuid())
+  gymId       String
+  memberId    String
+  amountMinor Int
+  method      String
+  paidAt      DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  gym    Gym    @relation(fields: [gymId], references: [id])
+  member Member @relation(fields: [memberId], references: [id])
+
+  @@index([gymId, paidAt])
+  @@index([gymId, memberId, paidAt])
+}

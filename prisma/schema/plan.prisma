@@ -1,0 +1,49 @@
+enum PlanStatus {
+  DRAFT
+  ACTIVE
+  INACTIVE
+}
+
+model Plan {
+  id             String     @id @default(cuid())
+  gymId          String
+  name           String
+  shortDesc      String
+  longDesc       String?
+  basePriceMinor Int
+  currency       String     @default("PKR")
+  status         PlanStatus @default(DRAFT)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  gym                 Gym                  @relation(fields: [gymId], references: [id])
+  features            PlanFeature[]
+  durations           PlanDuration[]
+  memberSubscriptions MemberSubscription[]
+
+  @@unique([gymId, name])
+  @@index([gymId, status])
+}
+
+model PlanFeature {
+  id     String @id @default(cuid())
+  planId String
+  label  String
+
+  plan Plan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@index([planId])
+}
+
+model PlanDuration {
+  id              String  @id @default(cuid())
+  planId          String
+  label           String?
+  durationMonths  Int
+  discountPercent Int     @default(0)
+
+  plan Plan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@unique([planId, durationMonths])
+  @@index([planId])
+}

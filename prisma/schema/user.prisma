@@ -1,0 +1,18 @@
+enum Role {
+  ADMIN
+  TRAINER
+  MEMBER
+}
+
+model User {
+  id       String @id @default(cuid())
+  gymId    String
+  email    String @unique
+  password String
+  role     Role
+
+  gym    Gym     @relation(fields: [gymId], references: [id])
+  member Member?
+
+  @@index([gymId, role])
+}

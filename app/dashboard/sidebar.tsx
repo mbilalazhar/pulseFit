@@ -96,6 +96,7 @@ export function Sidebar() {
   const [open, setOpen] = useState(false)
   const router = useRouter();
   const [logoutError, setLogoutError] = useState(false)
+  const [confirmLogout, setConfirmLogout] = useState(false)
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
@@ -115,6 +116,7 @@ export function Sidebar() {
 
   function handleLogout() {
     if (logoutMutation.isPending) return
+    setConfirmLogout(false)
     logoutMutation.mutate()
   }
   // Close the mobile drawer whenever the route changes.
@@ -216,7 +218,7 @@ export function Sidebar() {
           ))}
           <button
             type="button"
-            onClick={handleLogout}
+            onClick={() => setConfirmLogout(true)}
             className="flex w-full items-center gap-5 rounded-xl px-3 py-2.5 text-sm font-medium text-foreground/70 transition-colors hover:bg-muted hover:text-foreground"
           >
             <LogOut className="size-5 shrink-0" />
@@ -227,6 +229,26 @@ export function Sidebar() {
 
       {/* Full-screen loading state while logging out (3s hold + request) */}
       {logoutMutation.isPending ? <LoadingOverlay /> : null}
+
+      {/* Confirmation modal shown before the logout request fires */}
+      <Dialog open={confirmLogout} onOpenChange={setConfirmLogout}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Log out?</DialogTitle>
+            <DialogDescription>
+              You&apos;ll need to sign in again to access your dashboard.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmLogout(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleLogout}>
+              Logout
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Error modal shown when the logout request fails */}
       <Dialog open={logoutError} onOpenChange={setLogoutError}>

@@ -1,0 +1,20 @@
+enum GymStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model Gym {
+  id               String    @id @default(cuid())
+  organizationName String    @unique
+  slug             String    @unique
+  timeZone         String    @default("Asia/Karachi")
+  status           GymStatus @default(ACTIVE)
+  createdAt        DateTime  @default(now())
+
+  users               User[]
+  subscriptions       GymSubscription[]
+  plans               Plan[]
+  members             Member[]
+  memberSubscriptions MemberSubscription[]
+  payments            Payment[]
+}

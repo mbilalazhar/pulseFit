@@ -1,0 +1,25 @@
+enum Tier {
+  BASIC
+  PRO
+  PREMIUM
+}
+
+enum SubscriptionStatus {
+  TRIAL
+  ACTIVE
+}
+
+model GymSubscription {
+  id          String             @id @default(cuid())
+  gymId       String
+  tier        Tier
+  memberLimit Int
+  price       Int
+  status      SubscriptionStatus @default(TRIAL)
+  startDate   DateTime           @default(now())
+  endDate     DateTime
+
+  gym Gym @relation(fields: [gymId], references: [id])
+
+  @@index([gymId, status])
+}

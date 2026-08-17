@@ -1,0 +1,26 @@
+enum MemberStatus {
+  ACTIVE
+  INACTIVE
+  FROZEN
+}
+
+model Member {
+  id        String       @id @default(cuid())
+  gymId     String
+  userId    String?      @unique
+  name      String
+  phone     String
+  email     String?
+  status    MemberStatus @default(ACTIVE)
+  joinedAt  DateTime     @default(now())
+  createdAt DateTime     @default(now())
+
+  gym           Gym                  @relation(fields: [gymId], references: [id])
+  user          User?                @relation(fields: [userId], references: [id])
+  subscriptions MemberSubscription[]
+  payments      Payment[]
+
+  @@unique([gymId, email])
+  @@index([gymId, status, joinedAt])
+  @@index([gymId, phone])
+}
