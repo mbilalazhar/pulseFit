@@ -1,7 +1,8 @@
 "use client"
 
-import { User, Phone, Mail, CircleCheck } from "lucide-react"
+import { Phone, Mail, CircleCheck } from "lucide-react"
 import { useTrainerForm, formatDate, formatPkr } from "./trainer-form-context"
+import { TrainerAvatar } from "../trainer-avatar"
 
 function SummaryRow({ label, value }: { label: string; value: string }) {
   return (
@@ -17,15 +18,19 @@ export function TrainerPreview() {
     fullName,
     email,
     phone,
+    trainerType,
     salaryAmount,
     workHours,
     workDays,
     shift,
     joiningDate,
-    packages,
+    pricingModel,
+    contractorPrice,
+    sessionsPerWeek,
+    contractorStartDate,
+    specializations,
+    certifications,
   } = useTrainerForm()
-
-  const totalPackages = packages.length
 
   return (
     <section className="overflow-hidden rounded-2xl border bg-white">
@@ -34,16 +39,24 @@ export function TrainerPreview() {
       </div>
 
       {/* Identity */}
-      <div className="flex flex-col items-center gap-2 bg-accent/5 px-5 py-6">
-        <div className="flex size-24 items-center justify-center rounded-full border-4 border-white bg-muted text-muted-foreground">
-          <User className="size-10" />
-        </div>
+      <div className="flex flex-col items-center gap-2 bg-gray-100 px-5 py-6">
+        {/* No upload in the form yet, so this always shows the default. */}
+        <TrainerAvatar
+          src={null}
+          alt={fullName.trim() || "Trainer"}
+          size={96}
+          className="size-24 border-4 border-white bg-gray-200"
+        />
         <div className="flex flex-wrap items-center justify-center gap-2">
           <p className="font-heading text-base font-semibold">
             {fullName.trim() || "Trainer Name"}
           </p>
-          <span className="rounded-full bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent">
-            Personal Trainer
+          <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+            trainerType === "staff"
+              ? "bg-blue-100 text-blue-700"
+              : "bg-gray-200 text-gray-600"
+          }`}>
+            {trainerType === "staff" ? "Staff Trainer" : "Contractor"}
           </span>
         </div>
       </div>
@@ -63,56 +76,90 @@ export function TrainerPreview() {
         <div className="flex items-center gap-2.5 text-sm">
           <CircleCheck className="size-4 shrink-0 text-success" />
           <span className="font-medium text-success">
-            Active from {formatDate(joiningDate)}
+            {trainerType === "staff"
+              ? `Active from ${formatDate(joiningDate)}`
+              : `Active from ${formatDate(contractorStartDate)}`}
           </span>
         </div>
       </div>
 
       {/* Work summary */}
       <div className="space-y-2.5 border-b px-5 py-4">
-        <h3 className="font-heading text-sm font-semibold">Work Summary</h3>
-        <SummaryRow
-          label="Salary (Monthly)"
-          value={salaryAmount > 0 ? formatPkr(salaryAmount) : "—"}
-        />
-        <SummaryRow label="Work Hours / Day" value={workHours} />
-        <SummaryRow label="Work Days" value={workDays} />
-        <SummaryRow label="Shift" value={shift} />
-        <SummaryRow label="Joining Date" value={formatDate(joiningDate)} />
-      </div>
-
-      {/* Packages */}
-      <div className="space-y-3 px-5 py-4">
         <h3 className="font-heading text-sm font-semibold">
-          Packages ({totalPackages})
+          {trainerType === "staff" ? "Work Summary" : "Compensation Summary"}
         </h3>
-
-        {totalPackages === 0 ? (
-          <p className="text-xs text-muted-foreground">No packages added yet.</p>
+        {trainerType === "staff" ? (
+          <>
+            <SummaryRow
+              label="Salary (Monthly)"
+              value={salaryAmount > 0 ? formatPkr(salaryAmount) : "—"}
+            />
+            <SummaryRow label="Work Hours / Day" value={workHours} />
+            <SummaryRow label="Work Days" value={workDays} />
+            <SummaryRow label="Shift" value={shift} />
+            <SummaryRow label="Joining Date" value={formatDate(joiningDate)} />
+          </>
         ) : (
           <>
-            <div className="space-y-2.5">
-              {packages.map((pkg) => (
-                <div key={pkg.id} className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium">{pkg.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {pkg.type}
-                      {pkg.duration === "-" ? "" : ` · ${pkg.duration}`}
-                    </p>
-                  </div>
-                  <span className="shrink-0 text-sm font-semibold">
-                    {formatPkr(pkg.price)}
-                  </span>
-                </div>
-              ))}
-            </div>
-            <p className="border-t pt-3 text-xs text-muted-foreground">
-              Total {totalPackages} {totalPackages === 1 ? "package" : "packages"}
-            </p>
+            <SummaryRow
+              label={
+                pricingModel === "fixed"
+                  ? "Monthly Fee"
+                  : "Price per Session"
+              }
+              value={contractorPrice ? formatPkr(Number(contractorPrice)) : "—"}
+            />
+            <SummaryRow
+              label="Pricing Model"
+              value={pricingModel === "fixed" ? "Fixed Monthly" : "Session-based"}
+            />
+            <SummaryRow label="Sessions per Week" value={sessionsPerWeek || "—"} />
+            <SummaryRow label="Start Date" value={formatDate(contractorStartDate)} />
           </>
         )}
       </div>
+
+      {/* Specializations & Certifications (staff only) */}
+      {trainerType === "staff" && (
+        <div className="space-y-4 px-5 py-4">
+          <div className="space-y-2">
+            <h3 className="font-heading text-sm font-semibold">
+              Specializations ({specializations.length})
+            </h3>
+            {specializations.length === 0 ? (
+              <p className="text-xs text-muted-foreground">
+                No specializations selected yet.
+              </p>
+            ) : (
+              <div className="flex flex-wrap gap-1.5">
+                {specializations.map((spec) => (
+                  <span
+                    key={spec}
+                    className="inline-block rounded-full bg-accent/10 px-2.5 py-1 text-xs font-medium text-accent"
+                  >
+                    {spec}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {certifications.length > 0 && (
+            <div className="space-y-2 border-t pt-4">
+              <h3 className="font-heading text-sm font-semibold">
+                Certifications ({certifications.length})
+              </h3>
+              <ul className="space-y-1.5">
+                {certifications.map((cert) => (
+                  <li key={cert.id} className="text-xs text-muted-foreground">
+                    {cert.text}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
     </section>
   )
 }

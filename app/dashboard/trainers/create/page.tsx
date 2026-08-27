@@ -3,9 +3,9 @@ import { ArrowLeft } from "lucide-react"
 import { TrainerFormProvider } from "./trainer-form-context"
 import { TrainerInformation } from "./trainer-information"
 import { WorkSalaryDetails } from "./work-salary-details"
-import { TrainerPackages } from "./trainer-packages"
 import { TrainerPreview } from "./trainer-preview"
 import { TrainerActions } from "./trainer-actions"
+import { TrainerSpecializationsWrapper } from "./trainer-specializations-wrapper"
 
 export default function CreateTrainerPage() {
   return (
@@ -34,7 +34,7 @@ export default function CreateTrainerPage() {
           <div className="space-y-6">
             <TrainerInformation />
             <WorkSalaryDetails />
-            <TrainerPackages />
+            <TrainerSpecializationsWrapper />
           </div>
 
           {/* RIGHT COLUMN */}

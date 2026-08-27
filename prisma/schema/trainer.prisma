@@ -1,0 +1,93 @@
+enum TrainerType {
+  STAFF
+  CONTRACTOR
+}
+enum TrainerStatus {
+  ACTIVE
+  INACTIVE
+  ON_LEAVE
+}
+enum TrainerShift {
+  MORNING
+  EVENING
+  NIGHT
+  FLEXIBLE
+}
+enum ContractorPaymentType {
+  FIXED_FEE
+  SESSION_BASED
+}
+enum PackageType {
+  TRAINING
+  CONSULTATION
+}
+model Trainer {
+  id    String @id @default(cuid())
+  gymId String
+
+  fullName      String
+  email         String
+  contactNumber String
+
+  trainerType TrainerType
+  status      TrainerStatus @default(ACTIVE)
+
+  // STAFF only
+  monthlySalary   Float?
+  workHoursPerDay Float?
+  workDaysPerWeek Int?
+  shift           TrainerShift?
+
+  // CONTRACTOR only — the gym charges the trainer either a flat monthly fee
+  // or a per-session rate, over an agreed number of sessions per week.
+  contractorPaymentType ContractorPaymentType?
+  fixedFeeAmount        Float?
+  sessionRate           Float?
+  sessionsPerWeek       Int?
+
+  // STAFF joining date / CONTRACTOR contract start date
+  joiningDate DateTime?
+
+  profilePhotoUrl String?
+  bio             String?
+  yearsExperience Int?
+  certifications  String[]
+
+  gym             Gym                     @relation(fields: [gymId], references: [id])
+  specializations TrainerSpecialization[]
+  packages        TrainingPackage[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([gymId, email])
+  @@index([gymId, status])
+}
+model Specialization {
+  id   String @id @default(cuid())
+  name String @unique
+
+  trainers TrainerSpecialization[]
+}
+model TrainerSpecialization {
+  trainerId        String
+  specializationId String
+
+  trainer        Trainer        @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+  specialization Specialization @relation(fields: [specializationId], references: [id], onDelete: Cascade)
+
+  @@id([trainerId, specializationId])
+}
+model TrainingPackage {
+  id       String      @id @default(cuid())
+  name     String
+  type     PackageType
+  duration Int // session duration in minutes
+  price    Float
+
+  trainerId String
+  trainer   Trainer @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

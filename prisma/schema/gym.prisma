@@ -15,6 +15,7 @@ model Gym {
   subscriptions       GymSubscription[]
   plans               Plan[]
   members             Member[]
+  trainers            Trainer[]
   memberSubscriptions MemberSubscription[]
   payments            Payment[]
 }

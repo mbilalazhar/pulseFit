@@ -17,14 +17,6 @@ export interface Trainer {
   packagesCount: number
 }
 
-export interface LeaveRequest {
-  id: string
-  trainerId: string
-  trainerName: string
-  leaveDetail: string
-  status: "Pending" | "Approved"
-}
-
 export const trainersData: Trainer[] = [
   {
     id: "1",
@@ -121,23 +113,6 @@ export const trainersData: Trainer[] = [
     salary: "PKR 80,000",
     salaryNote: "Paid on 1 May",
     packagesCount: 2,
-  },
-]
-
-export const leaveRequestsData: LeaveRequest[] = [
-  {
-    id: "lr-1",
-    trainerId: "3",
-    trainerName: "Bilal Ahmed",
-    leaveDetail: "Applied for 3 days",
-    status: "Pending",
-  },
-  {
-    id: "lr-2",
-    trainerId: "2",
-    trainerName: "Sara Farooq",
-    leaveDetail: "On Leave",
-    status: "Approved",
   },
 ]
 

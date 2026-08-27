@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsx -e ' *)",
+      "Bash(npx tsx *)",
+      "Bash(npx prisma *)",
+      "Bash(cd \"c:/projects/pulseFit\" && sed -i 's/size-4\\\\.5/size-5/g' \"app/dashboard/trainers/[id]/metrics-strip.tsx\" && grep -n \"size-5\" \"app/dashboard/trainers/[id]/metrics-strip.tsx\")",
+      "Bash(npx next *)"
+    ],
+    "additionalDirectories": [
+      "C:\\projects\\pulseFit\\app\\dashboard\\trainers\\[id]"
+    ]
+  }
+}

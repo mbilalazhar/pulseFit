@@ -4,7 +4,6 @@ import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { TrainersTable } from "./trainers-table"
 import { StatsCards } from "./stats-cards"
-import { LeaveRequests } from "./leave-requests"
 
 export default function Trainers() {
   return (
@@ -30,13 +29,8 @@ export default function Trainers() {
       {/* Stats */}
       <StatsCards />
 
-      {/* Table + Leave requests */}
-      <div className="grid gap-6 lg:grid-cols-4">
-        <div className="lg:col-span-3">
-          <TrainersTable />
-        </div>
-        <LeaveRequests />
-      </div>
+      {/* Table */}
+      <TrainersTable />
     </div>
   )
 }
