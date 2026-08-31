@@ -1,16 +1,9 @@
 import Image from "next/image"
 import Link from "next/link"
-import loginArt from "@/assets/login.png"
 import logo from "@/assets/logo.svg"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { LoginForm } from "./LoginForm"
-
-const STATS = [
-  { value: "10K+", label: "Users" },
-  { value: "5K+", label: "Workouts" },
-  { value: "98%", label: "Satisfied" },
-]
 
 function GoogleIcon() {
   return (

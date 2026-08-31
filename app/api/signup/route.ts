@@ -72,6 +72,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "../../../lib/prisma";
 import bcrypt from "bcrypt";
 import { Tier, Role, SubscriptionStatus } from "@/lib/generated/prisma/enums";
+import { Prisma } from "@/lib/generated/prisma/client";
 
 const PLANS = {
   BASIC:   { memberLimit: 500,  price: 500000 },
@@ -212,7 +213,10 @@ export async function POST(req: Request) {
     console.error("Signup error:", error);
 
     // unique constraint race condition
-    if ((error as any)?.code === "P2002") {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
       return NextResponse.json(
         { message: "Email or organization name already exists" },
         { status: 409 }

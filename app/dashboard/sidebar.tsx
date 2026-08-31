@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -58,11 +58,20 @@ const bottomNav: NavItem[] = [
   { label: "Help & Support", href: "/support", icon: HelpCircle },
 ]
 
-function NavLink({ item, active }: { item: NavItem; active: boolean }) {
+function NavLink({
+  item,
+  active,
+  onNavigate,
+}: {
+  item: NavItem
+  active: boolean
+  onNavigate?: () => void
+}) {
   const Icon = item.icon
   return (
     <Link
       href={item.href}
+      onClick={onNavigate}
       aria-current={active ? "page" : undefined}
       className={cn(
         "relative flex items-center gap-5 rounded-xl px-3 py-4 text-sm font-medium transition-colors duration-200",
@@ -119,11 +128,10 @@ export function Sidebar() {
     setConfirmLogout(false)
     logoutMutation.mutate()
   }
-  // Close the mobile drawer whenever the route changes.
-  useEffect(() => {
-    setOpen(false)
-  }, [pathname])
 
+  // Close the mobile drawer on navigation — handled in the click, not an
+  // effect, so it doesn't trigger a cascading render on every route change.
+  const closeDrawer = useCallback(() => setOpen(false), [])
   // Lock body scroll while the mobile drawer is open.
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : ""
@@ -183,7 +191,11 @@ export function Sidebar() {
       >
         {/* Logo (+ close button on mobile) */}
         <div className="flex h-16 items-center justify-between px-6">
-          <Link href="/dashboard" aria-label="PulseFit home">
+          <Link
+            href="/dashboard"
+            onClick={closeDrawer}
+            aria-label="PulseFit home"
+          >
             <Image src={logo} alt="PulseFit" priority className="h-7 w-auto" />
           </Link>
           <button
@@ -203,6 +215,7 @@ export function Sidebar() {
               key={item.href}
               item={item}
               active={item.href === activeHref}
+              onNavigate={closeDrawer}
             />
           ))}
         </nav>
@@ -214,6 +227,7 @@ export function Sidebar() {
               key={item.href}
               item={item}
               active={item.href === activeHref}
+              onNavigate={closeDrawer}
             />
           ))}
           <button

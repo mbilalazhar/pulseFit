@@ -5,7 +5,15 @@
       "Bash(npx tsx *)",
       "Bash(npx prisma *)",
       "Bash(cd \"c:/projects/pulseFit\" && sed -i 's/size-4\\\\.5/size-5/g' \"app/dashboard/trainers/[id]/metrics-strip.tsx\" && grep -n \"size-5\" \"app/dashboard/trainers/[id]/metrics-strip.tsx\")",
-      "Bash(npx next *)"
+      "Bash(npx next *)",
+      "Bash(git -C /c/projects/pulseFit log --oneline -3 -- postcss.config.mjs)",
+      "Bash(git -C /c/projects/pulseFit status --short)",
+      "Bash(node -e ' *)",
+      "Bash(node \"C:/Users/BILALA~1/AppData/Local/Temp/claude/c--projects-pulseFit/134d3f0c-251b-43d8-b9d5-20bf3ca860d4/scratchpad/extract.js\" postcss.config.mjs)",
+      "Bash(git rm *)",
+      "Bash(echo \"[tsc exit: $?]\")",
+      "Bash(ls \"C:/Users/Bilal Azhar/.claude/projects/c--projects-pulseFit/memory/\"; echo \"=== MEMORY.md ===\"; cat \"C:/Users/Bilal Azhar/.claude/projects/c--projects-pulseFit/memory/MEMORY.md\" 2>/dev/null || echo \"\\(none\\)\")",
+      "Read(//c/Users/Bilal Azhar/.claude/projects/c--projects-pulseFit/memory/**)"
     ],
     "additionalDirectories": [
       "C:\\projects\\pulseFit\\app\\dashboard\\trainers\\[id]"
