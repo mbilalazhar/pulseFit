@@ -5,7 +5,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useMutation } from "@tanstack/react-query"
 import { toast } from "sonner"
-import { Loader2Icon, Mail, Lock, Eye, EyeOff, OctagonAlert } from "lucide-react"
+import { ArrowRight, Loader2Icon, Mail, Lock, Eye, EyeOff, OctagonAlert } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
@@ -83,9 +83,9 @@ export function LoginForm() {
         </div>
       ) : null}
 
-      <div className="space-y-4">
-        <div className="space-y-1.5">
-          <Label htmlFor="email" className="sr-only">
+      <div className="space-y-2 xl:space-y-3">
+        <div className="space-y-1">
+          <Label htmlFor="email" className="text-xs font-semibold xl:text-sm">
             Email
           </Label>
           <div className="relative">
@@ -98,7 +98,7 @@ export function LoginForm() {
               name="email"
               type="email"
               autoComplete="email"
-              placeholder="Email"
+              placeholder="Enter your email"
               value={email}
               aria-invalid={Boolean(errors.email)}
               aria-describedby={errors.email ? "email-error" : undefined}
@@ -106,7 +106,7 @@ export function LoginForm() {
                 setEmail(event.target.value)
                 revalidate(event.target.value, password)
               }}
-              className="h-11 rounded-xl bg-white pl-10 pr-3.5"
+              className="h-[34px] rounded-[9px] border-[#e2e2e9] bg-white pl-10 pr-3.5 text-xs md:text-xs placeholder:text-[#92939d] focus-visible:border-[#d41250] focus-visible:ring-[#d41250]/15 xl:h-11 xl:text-sm"
             />
           </div>
           {errors.email ? (
@@ -116,8 +116,8 @@ export function LoginForm() {
           ) : null}
         </div>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="password" className="sr-only">
+        <div className="space-y-1">
+          <Label htmlFor="password" className="text-xs font-semibold xl:text-sm">
             Password
           </Label>
           <div className="relative">
@@ -130,7 +130,7 @@ export function LoginForm() {
               name="password"
               type={showPassword ? "text" : "password"}
               autoComplete="current-password"
-              placeholder="Password"
+              placeholder="Enter your password"
               value={password}
               aria-invalid={Boolean(errors.password)}
               aria-describedby={errors.password ? "password-error" : undefined}
@@ -138,7 +138,7 @@ export function LoginForm() {
                 setPassword(event.target.value)
                 revalidate(email, event.target.value)
               }}
-              className="h-11 rounded-xl bg-white pl-10 pr-10"
+              className="h-[34px] rounded-[9px] border-[#e2e2e9] bg-white pl-10 pr-10 text-xs md:text-xs placeholder:text-[#92939d] focus-visible:border-[#d41250] focus-visible:ring-[#d41250]/15 xl:h-11 xl:text-sm"
             />
             <button
               type="button"
@@ -161,19 +161,23 @@ export function LoginForm() {
         </div>
       </div>
 
-      <div className="mt-5 flex items-center justify-between gap-4">
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
         <Label
           htmlFor="remember"
-          className="cursor-pointer text-sm font-normal"
+          className="cursor-pointer gap-2 text-xs font-normal text-[#50515a]"
         >
-          <Checkbox id="remember" name="remember" />
+          <Checkbox
+            id="remember"
+            name="remember"
+            className="border-[#d4d4dc] data-checked:border-[#d41250] data-checked:bg-[#d41250]"
+          />
           Keep me signed in
         </Label>
         <Link
           href="/forgot-password"
-          className="text-sm font-medium text-accent underline-offset-4 hover:underline"
+          className="text-xs font-medium text-[#df1550] underline-offset-4 hover:underline"
         >
-          Forgot password
+          Forgot password?
         </Link>
       </div>
 
@@ -181,7 +185,7 @@ export function LoginForm() {
         type="submit"
         size="lg"
         disabled={mutation.isPending}
-        className="mt-7 h-11 w-full rounded-xl text-sm"
+        className="mt-5 h-9 w-full gap-2 rounded-[10px] bg-[#d41250] text-sm font-semibold text-white shadow-[0_6px_18px_-8px_rgba(212,18,80,0.4)] hover:bg-[#ba1046] focus-visible:border-[#d41250] focus-visible:ring-[#d41250]/25 xl:h-12"
       >
         {mutation.isPending ? (
           <>
@@ -189,7 +193,10 @@ export function LoginForm() {
             Signing in
           </>
         ) : (
-          "Sign in"
+          <>
+            Sign in
+            <ArrowRight aria-hidden="true" className="size-4" />
+          </>
         )}
       </Button>
     </form>

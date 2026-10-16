@@ -199,43 +199,10 @@
   }
 }
 
-.animate-circle {
-  stroke-dasharray: 264;
-  stroke-dashoffset: 264;
-  animation: circleDraw 2.5s ease-in-out infinite;
-}
-
 .animate-heartbeat {
   stroke-dasharray: 80;
   stroke-dashoffset: 80;
   animation: heartbeatDraw 2.5s ease-in-out infinite;
-}
-
-.pulse-ring {
-  border: 2px solid rgba(203, 41, 87, 0.3);
-  animation: pulseRing 2.5s ease-out infinite;
-}
-
-.delay-1000 {
-  animation-delay: 1.2s;
-}
-
-@keyframes circleDraw {
-  0% {
-    stroke-dashoffset: 264;
-  }
-
-  40% {
-    stroke-dashoffset: 0;
-  }
-
-  80% {
-    stroke-dashoffset: 0;
-  }
-
-  100% {
-    stroke-dashoffset: -264;
-  }
 }
 
 @keyframes heartbeatDraw {
@@ -260,22 +227,5 @@
   100% {
     opacity: 0;
     stroke-dashoffset: -80;
-  }
-}
-
-@keyframes pulseRing {
-  0% {
-    transform: scale(.8);
-    opacity: .5;
-  }
-
-  70% {
-    transform: scale(1.35);
-    opacity: 0;
-  }
-
-  100% {
-    transform: scale(1.35);
-    opacity: 0;
   }
 }

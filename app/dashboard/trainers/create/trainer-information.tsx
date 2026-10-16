@@ -2,14 +2,14 @@
 
 import { Input } from "@/components/ui/input"
 import { useTrainerForm, inputClass } from "./trainer-form-context"
-import { StepHeading, FieldLabel } from "./form-fields"
+import { SectionHeading, FieldLabel } from "./form-fields"
 
 export function TrainerInformation() {
   const { fullName, setFullName, email, setEmail, phone, setPhone } = useTrainerForm()
 
   return (
     <section className="space-y-4 rounded-2xl border bg-white p-5">
-      <StepHeading step={1} title="Trainer Information" />
+      <SectionHeading title="Trainer Information" />
 
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="space-y-1.5">

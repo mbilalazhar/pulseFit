@@ -4,15 +4,9 @@ import { ChevronDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { areaClass } from "./trainer-form-context"
 
-/* Numbered section heading — the "1 Trainer Information" pattern. */
-export function StepHeading({ step, title }: { step: number; title: string }) {
+export function SectionHeading({ title }: { title: string }) {
   return (
-    <div className="flex items-center gap-2.5">
-      <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-semibold text-accent-foreground">
-        {step}
-      </span>
-      <h2 className="font-heading text-base font-semibold">{title}</h2>
-    </div>
+    <h2 className="font-heading text-base font-semibold">{title}</h2>
   )
 }
 

@@ -1,5 +1,6 @@
 import Image from "next/image"
 import Link from "next/link"
+import { ArrowRight } from "lucide-react"
 import logo from "@/assets/logo.svg"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
@@ -41,72 +42,77 @@ function FacebookIcon() {
 
 export default function FormSection() {
   return (
-    <div className="flex min-h-0 flex-col px-6 py-8 lg:px-12">
-        <header className="flex items-center justify-between gap-4">
-          <Link href="/" aria-label="PulseFit home">
-            <Image src={logo} alt="PulseFit" priority className="h-6 w-auto" />
-          </Link>
-          <Link
-            href="/signup"
-            className="text-sm font-medium underline underline-offset-4 transition-colors hover:text-accent"
-          >
-            Create an account
-          </Link>
-        </header>
+    <div className="relative z-10 flex min-h-svh flex-col px-5 pb-8 pt-6 sm:px-10 lg:px-[8%] lg:pb-6 lg:pt-5">
+      <header className="flex items-center justify-between gap-4">
+        <Link href="/" aria-label="PulseFit home">
+          <Image src={logo} alt="PulseFit" priority className="h-[22px] w-auto xl:h-7" />
+        </Link>
+        <Link
+          href="/signup"
+          className="group inline-flex items-center gap-2 text-xs font-medium underline underline-offset-4 transition-colors hover:text-[#d41250] xl:text-sm"
+        >
+          Create an account
+          <ArrowRight aria-hidden="true" className="size-3.5 text-[#d41250] transition-transform group-hover:translate-x-0.5" />
+        </Link>
+      </header>
 
-        <div className="flex flex-1 items-center justify-center py-2">
-          <div className="w-full max-w-sm">
-            <div className="space-y-2 text-center">
-              <h1 className="font-heading text-3xl tracking-tight">
-                Welcome back
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                Enter your PulseFit account details.
-              </p>
-            </div>
-
-            <div className="mt-4 space-y-3">
-              <Button
-                type="button"
-                variant="outline"
-                size="lg"
-                className="h-11 w-full gap-2.5 bg-white text-sm [&_svg:not([class*='size-'])]:size-[18px]"
-              >
-                <GoogleIcon />
-                Log in with Google
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="lg"
-                className="h-11 w-full gap-2.5 bg-white text-sm [&_svg:not([class*='size-'])]:size-[18px]"
-              >
-                <FacebookIcon />
-                Log in with Facebook
-              </Button>
-            </div>
-
-            <div className="my-7 flex items-center gap-4">
-              <Separator className="flex-1" />
-              <span className="text-xs font-medium tracking-widest text-muted-foreground">
-                OR
-              </span>
-              <Separator className="flex-1" />
-            </div>
-
-            {/* Interactive part lives in the client component */}
-            <LoginForm />
+      <div className="flex flex-1 items-center justify-center pt-10">
+        <div className="w-full max-w-[400px] rounded-[22px] border border-white/80 bg-white/95 px-6 py-5 shadow-[0_18px_60px_-22px_rgba(40,28,45,0.15)] sm:px-8 lg:max-w-[368px] xl:max-w-[440px] xl:px-10 xl:py-8">
+          <div className="space-y-1 text-center">
+            <h1 className="font-heading text-[26px] font-bold leading-tight tracking-tight xl:text-[32px]">
+              Welcome back
+            </h1>
+            <p className="text-xs text-[#7c7d86] xl:text-sm">
+              Enter your PulseFit account details.
+            </p>
           </div>
-        </div>
 
-        <footer className="text-center">
-          <Link
-            href="/support"
-            className="text-sm font-medium underline underline-offset-4 transition-colors hover:text-accent"
-          >
-            Trouble signing in?
-          </Link>
-      </footer>
+          <div className="mt-4 space-y-2 xl:mt-6 xl:space-y-2.5">
+            <Button
+              type="button"
+              variant="outline"
+              size="lg"
+              className="h-9 w-full justify-start xl:h-11 gap-3 rounded-[10px] border-[#dedee5] bg-white px-3.5 text-xs font-semibold shadow-none hover:bg-[#faf7f9] xl:text-sm"
+            >
+              <span className="flex w-7 shrink-0 items-center border-r border-[#eeeef2] pr-3 [&>svg]:size-[18px]">
+                <GoogleIcon />
+              </span>
+              Log in with Google
+              <ArrowRight aria-hidden="true" className="ml-auto size-3.5 text-[#7c7d86]" />
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="lg"
+              className="h-9 w-full justify-start xl:h-11 gap-3 rounded-[10px] border-[#dedee5] bg-white px-3.5 text-xs font-semibold shadow-none hover:bg-[#faf7f9] xl:text-sm"
+            >
+              <span className="flex w-7 shrink-0 items-center border-r border-[#eeeef2] pr-3 [&>svg]:size-[18px]">
+                <FacebookIcon />
+              </span>
+              Log in with Facebook
+              <ArrowRight aria-hidden="true" className="ml-auto size-3.5 text-[#7c7d86]" />
+            </Button>
+          </div>
+
+          <div className="my-3 flex xl:my-5 items-center gap-4">
+            <Separator className="flex-1 bg-[#e3e3e9]" />
+            <span className="text-[11px] font-medium text-[#7c7d86]">OR</span>
+            <Separator className="flex-1 bg-[#e3e3e9]" />
+          </div>
+
+          <LoginForm />
+
+          <footer className="mt-4 border-t border-[#eeeef2] pt-3 text-center leading-none xl:mt-6 xl:pt-4">
+            <Link
+              href="/support"
+              className="group inline-flex items-center gap-2 text-xs font-medium transition-colors hover:text-[#d41250]"
+            >
+              Trouble signing in?
+              <ArrowRight aria-hidden="true" className="size-3.5 text-[#d41250] transition-transform group-hover:translate-x-0.5" />
+            </Link>
+          </footer>
+        </div>
+      </div>
     </div>
   )
 }

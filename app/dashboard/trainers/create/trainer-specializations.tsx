@@ -9,7 +9,7 @@ import {
   CERTIFICATION_MAX,
   inputClass,
 } from "./trainer-form-context"
-import { StepHeading, FieldLabel } from "./form-fields"
+import { SectionHeading, FieldLabel } from "./form-fields"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 
@@ -28,7 +28,7 @@ export function TrainerSpecializations() {
 
   return (
     <section className="space-y-5 rounded-2xl border bg-white p-5">
-      <StepHeading step={3} title="Specializations &amp; Certifications" />
+      <SectionHeading title="Specializations &amp; Certifications" />
 
       {/* Specializations — capped so a trainer reads as a specialist, not a list. */}
       <div className="space-y-2.5">

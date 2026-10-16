@@ -2,7 +2,13 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 
-const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
+function getSecret(): Uint8Array {
+  const secret = process.env.JWT_SECRET;
+  if (!secret?.trim()) {
+    throw new Error("JWT_SECRET is not configured. Set it in your environment before logging in.");
+  }
+  return new TextEncoder().encode(secret);
+}
 
 export type Session = {
   userId: string;
@@ -15,12 +21,12 @@ export async function createToken(payload: Session): Promise<string> {
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime("7d")
-    .sign(secret);
+    .sign(getSecret());
 }
 
 export async function verifyToken(token: string): Promise<Session | null> {
   try {
-    const { payload } = await jwtVerify(token, secret);
+    const { payload } = await jwtVerify(token, getSecret());
     return payload as unknown as Session;
   } catch {
     return null;

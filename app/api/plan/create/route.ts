@@ -23,6 +23,7 @@ export async function POST(req:Request) {
                 longDesc:       data.longDesc,
                 basePriceMinor: data.basePriceMinor,
                 currency:       data.currency,
+                maxHoursPerDay: data.maxHoursPerDay,
                 status:         data.status,
                 features:       {create: data.features},
                 durations:      {create: data.durations},
