@@ -1,7 +1,9 @@
 "use client"
 
 import { useState } from "react"
+import Image from "next/image"
 import { Search, Bell, ChevronDown } from "lucide-react"
+import adminAvatar from "@/assets/admin.png"
 
 type NavbarUser = {
   name: string
@@ -18,16 +20,6 @@ type NavbarProps = {
 const DEFAULT_USER: NavbarUser = {
   name: "Admin",
   role: "Super Admin",
-}
-
-function initials(name: string) {
-  return name
-    .split(" ")
-    .map((part) => part[0])
-    .filter(Boolean)
-    .slice(0, 2)
-    .join("")
-    .toUpperCase()
 }
 
 export function Navbar({
@@ -79,18 +71,14 @@ export function Navbar({
           type="button"
           className="flex items-center gap-2.5 rounded-full p-1 pr-2 transition-colors hover:bg-muted"
         >
-          {user.avatarUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={user.avatarUrl}
-              alt={user.name}
-              className="size-9 rounded-full object-cover"
-            />
-          ) : (
-            <span className="flex size-9 items-center justify-center rounded-full bg-accent/10 text-xs font-semibold text-accent">
-              {initials(user.name)}
-            </span>
-          )}
+          <Image
+            src={user.avatarUrl || adminAvatar}
+            alt={user.name}
+            width={36}
+            height={36}
+            unoptimized={Boolean(user.avatarUrl)}
+            className="size-9 rounded-full object-cover"
+          />
           <span className="hidden text-left leading-tight sm:block">
             <span className="block text-sm font-semibold">{user.name}</span>
             <span className="block text-xs text-muted-foreground">

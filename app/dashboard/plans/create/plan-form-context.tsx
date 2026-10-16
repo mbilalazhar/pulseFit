@@ -3,14 +3,14 @@
 import {
   createContext,
   useContext,
-  useMemo,
   useState,
   type ReactNode,
 } from "react"
 import { useRouter } from "next/navigation"
-import { useMutation } from "@tanstack/react-query"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 import { createPlan } from "@/lib/services/subscription.services"
+import { createPlanSchema, PLAN_FEATURE_MAX, TRAINER_FEATURE_LABEL } from "@/lib/validators/plan"
 
 /* ---------- types ---------- */
 
@@ -22,7 +22,8 @@ export type Feature = { id: string; text: string }
 
 export const SHORT_MAX = 60
 export const LONG_MAX = 300
-export const FEATURE_MAX = 250
+export const FEATURE_MAX = PLAN_FEATURE_MAX
+const TRAINER_FEATURE_ID = "included-trainer"
 
 export const STATUS_OPTIONS: {
   value: Status
@@ -94,6 +95,8 @@ type PlanFormValue = {
   setBasePrice: (v: string) => void
   currency: string
   setCurrency: (v: string) => void
+  maxHoursPerDay: string
+  setMaxHoursPerDay: (v: string) => void
 
   durations: Duration[]
   durMonths: number
@@ -104,6 +107,8 @@ type PlanFormValue = {
   removeDuration: (id: string) => void
 
   features: Feature[]
+  includesTrainer: boolean
+  setIncludesTrainer: (v: boolean) => void
   addingFeature: boolean
   setAddingFeature: (v: boolean) => void
   featureDraft: string
@@ -133,6 +138,7 @@ export function usePlanForm() {
 
 export function PlanFormProvider({ children }: { children: ReactNode }) {
   const router = useRouter()
+  const queryClient = useQueryClient()
 
   const [planName, setPlanName] = useState("")
   const [shortDesc, setShortDesc] = useState("")
@@ -140,6 +146,7 @@ export function PlanFormProvider({ children }: { children: ReactNode }) {
 
   const [basePrice, setBasePrice] = useState("")
   const [currency, setCurrency] = useState("PKR")
+  const [maxHoursPerDay, setMaxHoursPerDay] = useState("")
 
   const [durations, setDurations] = useState<Duration[]>([])
   const [durMonths, setDurMonths] = useState(1)
@@ -149,14 +156,25 @@ export function PlanFormProvider({ children }: { children: ReactNode }) {
   const [addingFeature, setAddingFeature] = useState(false)
   const [featureDraft, setFeatureDraft] = useState("")
 
+  const includesTrainer = features.some((feature) => feature.id === TRAINER_FEATURE_ID)
+  const setIncludesTrainer = (included: boolean) => {
+    setFeatures((previous) => {
+      const remaining = previous.filter((feature) => feature.id !== TRAINER_FEATURE_ID)
+      return included
+        ? [{ id: TRAINER_FEATURE_ID, text: TRAINER_FEATURE_LABEL }, ...remaining]
+        : remaining
+    })
+  }
+
   const [status, setStatus] = useState<Status>("DRAFT")
 
   const monthly = Number(basePrice) || 0
 
   const priceFor = (months: number, discount: number) =>
-    Math.round(monthly * months * (1 - discount / 100))
+    Math.round(monthly * months * (1 - discount / 100) * 100) / 100
 
-  const format = (n: number) => `${currency} ${n.toLocaleString()}`
+  const format = (n: number) =>
+    `${currency} ${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
   const addDuration = () => {
     if (durations.some((d) => d.months === durMonths)) {
@@ -177,6 +195,11 @@ export function PlanFormProvider({ children }: { children: ReactNode }) {
   const addFeature = () => {
     const text = featureDraft.trim()
     if (!text) return
+    if (text.toLowerCase() === TRAINER_FEATURE_LABEL.toLowerCase()) {
+      setIncludesTrainer(true)
+      setFeatureDraft("")
+      return
+    }
     setFeatures((prev) => [
       ...prev,
       { id: crypto.randomUUID(), text: capitalize(text) },
@@ -190,6 +213,7 @@ export function PlanFormProvider({ children }: { children: ReactNode }) {
   const mutation = useMutation({
     mutationFn: createPlan,
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["plans"] })
       toast.success("Plan created successfully.")
       router.push("/dashboard/plans")
     },
@@ -199,6 +223,7 @@ export function PlanFormProvider({ children }: { children: ReactNode }) {
   })
 
   const handleSubmit = (asDraft: boolean) => {
+    if (mutation.isPending) return
     if (!planName.trim()) {
       toast.error("Enter a plan name.")
       return
@@ -220,13 +245,14 @@ export function PlanFormProvider({ children }: { children: ReactNode }) {
       return
     }
 
-    mutation.mutate({
+    const parsed = createPlanSchema.safeParse({
       name: planName.trim(),
       shortDesc: shortDesc.trim(),
       longDesc: longDesc.trim() || undefined,
       // API stores price in minor units (paisa/cents).
       basePriceMinor: Math.round(monthly * 100),
       currency,
+      maxHoursPerDay: maxHoursPerDay.trim() ? Number(maxHoursPerDay) : null,
       status: asDraft ? "DRAFT" : status,
       features: features.map((f) => ({ label: f.text })),
       durations: durations.map((d) => ({
@@ -235,59 +261,50 @@ export function PlanFormProvider({ children }: { children: ReactNode }) {
         discountPercent: d.discount,
       })),
     })
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0].message)
+      return
+    }
+    mutation.mutate(parsed.data)
   }
 
-  const value = useMemo<PlanFormValue>(
-    () => ({
-      planName,
-      setPlanName,
-      shortDesc,
-      setShortDesc,
-      longDesc,
-      setLongDesc,
-      basePrice,
-      setBasePrice,
-      currency,
-      setCurrency,
-      durations,
-      durMonths,
-      setDurMonths,
-      durDiscount,
-      setDurDiscount,
-      addDuration,
-      removeDuration,
-      features,
-      addingFeature,
-      setAddingFeature,
-      featureDraft,
-      setFeatureDraft,
-      addFeature,
-      removeFeature,
-      status,
-      setStatus,
-      monthly,
-      priceFor,
-      format,
-      handleSubmit,
-      isSubmitting: mutation.isPending,
-    }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [
-      planName,
-      shortDesc,
-      longDesc,
-      basePrice,
-      currency,
-      durations,
-      durMonths,
-      durDiscount,
-      features,
-      addingFeature,
-      featureDraft,
-      status,
-      mutation.isPending,
-    ],
-  )
+  const value: PlanFormValue = {
+    planName,
+    setPlanName,
+    shortDesc,
+    setShortDesc,
+    longDesc,
+    setLongDesc,
+    basePrice,
+    setBasePrice,
+    currency,
+    setCurrency,
+    maxHoursPerDay,
+    setMaxHoursPerDay,
+    durations,
+    durMonths,
+    setDurMonths,
+    durDiscount,
+    setDurDiscount,
+    addDuration,
+    removeDuration,
+    features,
+    includesTrainer,
+    setIncludesTrainer,
+    addingFeature,
+    setAddingFeature,
+    featureDraft,
+    setFeatureDraft,
+    addFeature,
+    removeFeature,
+    status,
+    setStatus,
+    monthly,
+    priceFor,
+    format,
+    handleSubmit,
+    isSubmitting: mutation.isPending,
+  }
 
   return (
     <PlanFormContext.Provider value={value}>

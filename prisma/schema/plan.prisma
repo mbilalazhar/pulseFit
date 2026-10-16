@@ -12,6 +12,7 @@ model Plan {
   longDesc       String?
   basePriceMinor Int
   currency       String     @default("PKR")
+  maxHoursPerDay  Float?
   status         PlanStatus @default(DRAFT)
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt

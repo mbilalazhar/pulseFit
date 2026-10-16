@@ -33,6 +33,7 @@ export function PlanInformation() {
           </label>
           <Input
             id="plan-name"
+            maxLength={100}
             value={planName}
             onChange={(e) => setPlanName(e.target.value)}
             placeholder="e.g. Pro Plan"

@@ -6,6 +6,7 @@ export type CreatePlanPayload = {
   longDesc?: string
   basePriceMinor: number
   currency: string
+  maxHoursPerDay?: number | null
   status: PlanStatus
   features: { label: string }[]
   durations: {
@@ -57,6 +58,7 @@ export type PlanSummary = {
   longDesc: string | null
   basePriceMinor: number
   currency: string
+  maxHoursPerDay: number | null
   status: PlanStatus
   features: { id: string; label: string }[]
   durations: {

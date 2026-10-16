@@ -37,6 +37,7 @@ export async function GET() {
       longDesc: plan.longDesc,
       basePriceMinor: plan.basePriceMinor,
       currency: plan.currency,
+      maxHoursPerDay: plan.maxHoursPerDay,
       status: plan.status,
       features: plan.features,
       durations: plan.durations,

@@ -7,7 +7,7 @@ import {
   WORK_DAYS_OPTIONS,
   SHIFT_OPTIONS,
 } from "./trainer-form-context"
-import { StepHeading, FieldLabel, SelectField } from "./form-fields"
+import { SectionHeading, FieldLabel, SelectField } from "./form-fields"
 import { cn } from "@/lib/utils"
 
 export function WorkSalaryDetails() {
@@ -36,7 +36,7 @@ export function WorkSalaryDetails() {
 
   return (
     <section className="space-y-4 rounded-2xl border bg-white p-5">
-      <StepHeading step={2} title="Work &amp; Compensation Details" />
+      <SectionHeading title="Work &amp; Compensation Details" />
 
       {/* Trainer Type Selector */}
       <div className="space-y-3 border-b pb-4">

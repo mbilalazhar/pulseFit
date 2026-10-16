@@ -57,7 +57,7 @@ const STATUS_ACTION: Record<
 }
 
 const money = (currency: string, minor: number) =>
-  `${currency} ${Math.round(minor / 100).toLocaleString()}`
+  `${currency} ${(minor / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
 const VISIBLE_LIMIT = 3
 
@@ -120,6 +120,11 @@ export function PlanCard({ plan }: { plan: PlanSummary }) {
           {money(plan.currency, plan.basePriceMinor)}
         </p>
         <p className="text-xs text-muted-foreground">per month</p>
+        {plan.maxHoursPerDay != null ? (
+          <p className="mt-2 text-xs text-muted-foreground">
+            Up to {plan.maxHoursPerDay} {plan.maxHoursPerDay === 1 ? "hour" : "hours"} of gym access per day
+          </p>
+        ) : null}
       </div>
 
       {/* Body: features + durations */}

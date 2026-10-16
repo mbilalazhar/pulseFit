@@ -11,6 +11,8 @@ export function PricingDurations() {
     setBasePrice,
     currency,
     setCurrency,
+    maxHoursPerDay,
+    setMaxHoursPerDay,
     durations,
     durMonths,
     setDurMonths,
@@ -33,15 +35,27 @@ export function PricingDurations() {
           <label htmlFor="base-price" className="text-sm font-medium">
             Base Price
           </label>
-          <div className="flex h-11 items-center rounded-xl border border-input bg-white px-3.5 focus-within:border-primary focus-within:ring-3 focus-within:ring-primary/20">
-            <span className="mr-2 text-sm text-muted-foreground">{currency}</span>
+          <div className="flex h-11 items-center gap-3 rounded-xl border border-input bg-white pl-1.5 pr-3.5 focus-within:border-primary focus-within:ring-3 focus-within:ring-primary/20">
+            <select
+              id="currency"
+              aria-label="Currency"
+              value={currency}
+              onChange={(e) => setCurrency(e.target.value)}
+              className="h-8 shrink-0 cursor-pointer rounded-md border border-input bg-muted/60 px-2 text-xs font-semibold outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+            >
+              <option value="PKR">PKR</option>
+              <option value="USD">USD</option>
+            </select>
             <input
               id="base-price"
               inputMode="decimal"
               value={basePrice}
-              onChange={(e) => setBasePrice(e.target.value.replace(/[^0-9.]/g, ""))}
+              onChange={(e) => {
+                const value = e.target.value
+                if (/^\d*(\.\d{0,2})?$/.test(value)) setBasePrice(value)
+              }}
               placeholder="0.00"
-              className="w-full bg-transparent text-sm outline-none"
+              className="min-w-0 w-full bg-transparent text-sm outline-none"
             />
           </div>
           <p className="text-xs text-muted-foreground">
@@ -50,18 +64,30 @@ export function PricingDurations() {
         </div>
 
         <div className="space-y-1.5">
-          <label htmlFor="currency" className="text-sm font-medium">
-            Currency
+          <label htmlFor="max-hours-per-day" className="text-sm font-medium">
+            Maximum Gym Hours / Day
           </label>
-          <select
-            id="currency"
-            value={currency}
-            onChange={(e) => setCurrency(e.target.value)}
-            className={cn(areaClass, "h-11 py-0")}
-          >
-            <option value="PKR">PKR - Pakistani Rupee</option>
-            <option value="USD">USD - US Dollar</option>
-          </select>
+          <div className="flex h-11 items-center gap-3 rounded-xl border border-input bg-white px-3.5 focus-within:border-primary focus-within:ring-3 focus-within:ring-primary/20">
+            <input
+              id="max-hours-per-day"
+              type="number"
+              inputMode="decimal"
+              min={0}
+              max={24}
+              step="any"
+              value={maxHoursPerDay}
+              onChange={(e) => setMaxHoursPerDay(e.target.value)}
+              placeholder="e.g. 2"
+              aria-describedby="max-hours-hint"
+              className="min-w-0 w-full bg-transparent text-sm outline-none"
+            />
+            <span className="shrink-0 rounded-md bg-muted/60 px-2 py-1 text-xs font-medium text-muted-foreground">
+              hrs/day
+            </span>
+          </div>
+          <p id="max-hours-hint" className="text-xs text-muted-foreground">
+            Set a daily limit up to 24 hours. Leave blank for no limit.
+          </p>
         </div>
       </div>
 

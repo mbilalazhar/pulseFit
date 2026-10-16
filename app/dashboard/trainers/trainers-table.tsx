@@ -122,7 +122,7 @@ export function TrainersTable() {
                 href={`/dashboard/trainers/${trainer.id}`}
                 className={cn(
                   ROW_GRID,
-                  "group relative rounded-xl border-b px-4 py-4 text-sm",
+                  "group relative rounded-sm border-b px-4 py-4 text-sm",
                   "transition-[transform,box-shadow,background-color,border-color] duration-200 ease-out",
                   /* Lift the row out of the list on hover. */
                   "hover:z-10 hover:-translate-y-1 hover:border-transparent hover:bg-white hover:shadow-lg hover:shadow-black/10",
