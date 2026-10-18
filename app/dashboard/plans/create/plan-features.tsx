@@ -31,7 +31,7 @@ export function PlanFeatures() {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-2xl border bg-white p-5">
+      <div className="rounded-2xl border bg-card p-5">
         <Label htmlFor="includes-trainer" className="cursor-pointer items-start gap-3 leading-snug">
           <Checkbox
             id="includes-trainer"
@@ -42,7 +42,7 @@ export function PlanFeatures() {
           Trainer is included in the plan
         </Label>
       </div>
-      <section className="space-y-4 rounded-2xl border bg-white p-5">
+      <section className="space-y-4 rounded-2xl border bg-card p-5">
         <div className="flex items-center justify-between">
           <h2 className="font-heading text-base font-semibold">Plan Features</h2>
           {!addingFeature ? (

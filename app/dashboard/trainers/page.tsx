@@ -7,7 +7,7 @@ import { StatsCards } from "./stats-cards"
 
 export default function Trainers() {
   return (
-    <div className="space-y-6">
+    <div className="mx-auto w-full max-w-[1600px] space-y-5">
       {/* Header */}
       <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-1">
@@ -19,7 +19,7 @@ export default function Trainers() {
 
         <Link
           href="/dashboard/trainers/create"
-          className={cn(buttonVariants({ size: "lg" }), "gap-2 self-start sm:self-auto")}
+          className={cn(buttonVariants({ size: "lg" }), "h-10 gap-2 self-start bg-primary px-5 text-primary-foreground hover:bg-primary/90 focus-visible:border-ring focus-visible:ring-ring/20 sm:self-auto")}
         >
           <Plus className="size-4" />
           Add New Trainer

@@ -33,19 +33,19 @@ export function TrainerPreview() {
   } = useTrainerForm()
 
   return (
-    <section className="overflow-hidden rounded-2xl border bg-white">
+    <section className="overflow-hidden rounded-2xl border bg-card">
       <div className="border-b px-5 py-4">
         <h2 className="font-heading text-base font-semibold">Trainer Preview</h2>
       </div>
 
       {/* Identity */}
-      <div className="flex flex-col items-center gap-2 bg-gray-100 px-5 py-6">
+      <div className="flex flex-col items-center gap-2 bg-muted px-5 py-6">
         {/* No upload in the form yet, so this always shows the default. */}
         <TrainerAvatar
           src={null}
           alt={fullName.trim() || "Trainer"}
           size={96}
-          className="size-24 border-4 border-white bg-gray-200"
+          className="size-24 border-4 border-card bg-muted"
         />
         <div className="flex flex-wrap items-center justify-center gap-2">
           <p className="font-heading text-base font-semibold">
@@ -53,8 +53,8 @@ export function TrainerPreview() {
           </p>
           <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
             trainerType === "staff"
-              ? "bg-blue-100 text-blue-700"
-              : "bg-gray-200 text-gray-600"
+              ? "bg-blue-100 dark:bg-blue-950/50 text-blue-700 dark:text-blue-400"
+              : "bg-muted text-foreground/80"
           }`}>
             {trainerType === "staff" ? "Staff Trainer" : "Contractor"}
           </span>

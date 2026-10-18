@@ -1,21 +1,22 @@
 "use client"
 
-import { useState, type ComponentProps, type FormEvent, type ReactNode } from "react"
+import { useRef, useState, type ComponentProps, type FormEvent, type ReactNode } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { useQuery } from "@tanstack/react-query"
-import { ArrowLeft, CheckCircle2, Plus } from "lucide-react"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { ArrowLeft, CheckCircle2, Loader2, Plus } from "lucide-react"
 import defaultAvatar from "@/assets/User_Default.png"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { getPlans } from "@/lib/services/subscription.services"
 import { getTrainers } from "@/lib/services/trainer.services"
+import { createMember } from "@/lib/services/member.services"
 import { cn } from "@/lib/utils"
 import { membershipAmounts, membershipExpiry } from "./member-form-calculations"
 
-const controlClassName = "h-11 w-full min-w-0 rounded-sm border border-input bg-white px-3.5 text-sm text-black outline-none transition-colors placeholder:text-muted-foreground focus:border-black focus:ring-3 focus:ring-black/20 focus-visible:border-black focus-visible:ring-3 focus-visible:ring-black/20 disabled:cursor-not-allowed disabled:bg-neutral-100 disabled:text-neutral-600 disabled:opacity-100 read-only:bg-neutral-50"
-const primaryButtonClassName = "gap-1.5 bg-accent text-white hover:bg-accent-hover focus-visible:border-black focus-visible:ring-black/20"
+const controlClassName = "h-11 w-full min-w-0 rounded-sm border border-input bg-card px-3.5 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-ring focus:ring-3 focus:ring-ring/20 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:bg-muted disabled:text-foreground/80 disabled:opacity-100 read-only:bg-muted"
+const primaryButtonClassName = "gap-1.5 bg-accent text-white hover:bg-accent-hover focus-visible:border-ring focus-visible:ring-ring/20"
 
 function today() {
   const date = new Date()
@@ -29,9 +30,9 @@ function displayDate(value: string) {
 function Field({ id, label, required, optional, help, children }: { id: string; label: string; required?: boolean; optional?: boolean; help?: ReactNode; children: ReactNode }) {
   return (
     <div className="min-w-0 space-y-1.5">
-      <Label htmlFor={id} className="gap-0.5 text-sm leading-normal font-medium text-black">
+      <Label htmlFor={id} className="gap-0.5 text-sm leading-normal font-medium text-foreground">
         {label}{required ? <span aria-hidden="true" className="text-accent">*</span> : null}
-        {optional ? <span className="font-normal text-neutral-600">(Optional)</span> : null}
+        {optional ? <span className="font-normal text-foreground/80">(Optional)</span> : null}
       </Label>
       {children}
       {help ? <div id={`${id}-help`} className="text-xs leading-relaxed text-muted-foreground">{help}</div> : null}
@@ -45,7 +46,7 @@ function MemberInput({ className, ...props }: ComponentProps<typeof Input>) {
 
 function Section({ id, title, children }: { id: string; title: string; children: ReactNode }) {
   return (
-    <section aria-labelledby={id} className="space-y-4 rounded-2xl border bg-white p-5">
+    <section aria-labelledby={id} className="space-y-4 rounded-2xl border bg-card p-5">
       <h2 id={id} className="font-heading text-base font-semibold">{title}</h2>
       {children}
     </section>
@@ -53,43 +54,82 @@ function Section({ id, title, children }: { id: string; title: string; children:
 }
 
 function SummaryRow({ label, children, strong = false }: { label: string; children: ReactNode; strong?: boolean }) {
-  return <div className={`flex items-start justify-between gap-3 text-sm ${strong ? "font-semibold" : ""}`}><dt className="text-muted-foreground">{label}</dt><dd className="text-right font-medium text-black tabular-nums">{children}</dd></div>
+  return <div className={`flex items-start justify-between gap-3 text-sm ${strong ? "font-semibold" : ""}`}><dt className="text-muted-foreground">{label}</dt><dd className="text-right font-medium text-foreground tabular-nums">{children}</dd></div>
 }
 
 export function AddMemberForm() {
   const plansQuery = useQuery({ queryKey: ["plans"], queryFn: getPlans })
   const trainersQuery = useQuery({ queryKey: ["trainers"], queryFn: getTrainers })
-  const [previewComplete, setPreviewComplete] = useState(false)
+  const queryClient = useQueryClient()
+  const formRef = useRef<HTMLFormElement>(null)
   const [fullName, setFullName] = useState("")
   const [email, setEmail] = useState("")
-  const [durationId, setDurationId] = useState("")
+  const [planId, setPlanId] = useState("")
+  const [durationMonths, setDurationMonths] = useState(1)
   const [startDate, setStartDate] = useState(today)
   const [trainerRequired, setTrainerRequired] = useState(false)
   const [specialDiscount, setSpecialDiscount] = useState("")
   const [received, setReceived] = useState("")
   const plans = plansQuery.data?.plans.filter((plan) => plan.status === "ACTIVE") ?? []
   const trainers = trainersQuery.data?.trainers.filter((trainer) => trainer.status === "ACTIVE") ?? []
-  const options = plans.flatMap((plan) => plan.durations.map((duration) => ({ plan, duration })))
-  const selected = options.find(({ duration }) => duration.id === durationId)
-  const expiryDate = selected ? membershipExpiry(startDate, selected.duration.durationMonths) : ""
-  const amounts = membershipAmounts(selected?.plan.basePriceMinor ?? 0, selected?.duration.durationMonths ?? 0, selected?.duration.discountPercent ?? 0, specialDiscount, received)
-  const money = (minor: number) => selected ? `${selected.plan.currency} ${(minor / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—"
-  const durationLabel = selected ? `${selected.duration.durationMonths} ${selected.duration.durationMonths === 1 ? "Month" : "Months"}` : "—"
+  const selected = plans.find((plan) => plan.id === planId)
+  const expiryDate = selected ? membershipExpiry(startDate, durationMonths) : ""
+  const discountPercent = selected?.durations.find((duration) => duration.durationMonths === durationMonths)?.discountPercent ?? 0
+  const amounts = membershipAmounts(selected?.basePriceMinor ?? 0, durationMonths, discountPercent, specialDiscount, received)
+  const money = (minor: number) => selected ? `${selected.currency} ${(minor / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—"
+  const durationLabel = `${durationMonths} ${durationMonths === 1 ? "Month" : "Months"}`
   const paymentStatus = selected ? amounts.status : "Pending"
-  const statusClassName = paymentStatus === "Paid" ? "bg-emerald-50 text-emerald-800" : paymentStatus === "Partial" ? "bg-amber-50 text-amber-900" : "bg-neutral-100 text-neutral-800"
-  const canSubmit = !!selected && !!expiryDate && !plansQuery.isError && (!trainerRequired || (!trainersQuery.isPending && !trainersQuery.isError && trainers.length > 0))
+  const statusClassName = paymentStatus === "Paid" ? "bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-400" : paymentStatus === "Partial" ? "bg-amber-50 dark:bg-amber-950/50 text-amber-900 dark:text-amber-400" : "bg-muted text-foreground"
+  const mutation = useMutation({
+    mutationFn: createMember,
+    retry: false,
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["members"] })
+      void queryClient.invalidateQueries({ queryKey: ["plans"] })
+      void queryClient.invalidateQueries({ queryKey: ["trainers"] })
+      void queryClient.invalidateQueries({ queryKey: ["payments"] })
+    },
+  })
+  const canSubmit = !!selected && !!expiryDate && !plansQuery.isError && !mutation.isPending && !mutation.isSuccess && (!trainerRequired || (!trainersQuery.isPending && !trainersQuery.isError && trainers.length > 0))
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (canSubmit) setPreviewComplete(true)
+    if (!canSubmit) return
+    const fields = new FormData(event.currentTarget)
+    mutation.mutate({
+      name: fullName,
+      phone: String(fields.get("phone") ?? ""),
+      email,
+      planId,
+      durationMonths,
+      startDate,
+      trainerId: trainerRequired ? String(fields.get("trainerId") ?? "") : null,
+      specialDiscountMinor: Math.round(Number(specialDiscount || 0) * 100),
+      amountReceivedMinor: Math.round(Number(received || 0) * 100),
+      paymentDate: String(fields.get("paymentDate") ?? ""),
+      paymentMethod: (fields.get("paymentMethod") || "other") as "cash" | "card" | "bank_transfer" | "upi" | "mobile_wallet" | "other",
+    })
+  }
+
+  function resetForm() {
+    formRef.current?.reset()
+    setFullName("")
+    setEmail("")
+    setPlanId("")
+    setDurationMonths(1)
+    setStartDate(today())
+    setTrainerRequired(false)
+    setSpecialDiscount("")
+    setReceived("")
+    mutation.reset()
   }
 
   return (
-    <form onSubmit={handleSubmit} onChange={() => setPreviewComplete(false)} className="space-y-6 text-black [--ring:#000]">
+    <form ref={formRef} onSubmit={handleSubmit} aria-busy={mutation.isPending} className="space-y-6 text-foreground ">
       <header>
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <Link href="/dashboard/members" aria-label="Back to members" className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-black outline-none transition-colors hover:bg-black hover:text-white focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2">
+            <Link href="/dashboard/members" aria-label="Back to members" className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-foreground outline-none transition-colors hover:bg-primary hover:text-primary-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
               <ArrowLeft aria-hidden="true" className="size-5" />
             </Link>
             <h1 className="font-heading text-2xl font-bold tracking-tight">Add New Member</h1>
@@ -98,10 +138,10 @@ export function AddMemberForm() {
         </div>
       </header>
 
-      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <fieldset disabled={mutation.isPending || mutation.isSuccess} className="grid min-w-0 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="min-w-0 space-y-6">
           <Section id="member-information" title="Member Information">
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               <Field id="member-name" label="Full Name" required>
                 <MemberInput id="member-name" name="name" value={fullName} onChange={(event) => setFullName(event.target.value)} autoComplete="name" placeholder="Enter full name" required pattern={".*\\S.*"} maxLength={120} />
               </Field>
@@ -111,29 +151,27 @@ export function AddMemberForm() {
               <Field id="member-email" label="Email" required>
                 <MemberInput id="member-email" name="email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" placeholder="Enter email address" required maxLength={254} />
               </Field>
-              <Field id="member-id" label="Member ID" help="Automatically generated when saved.">
-                <MemberInput id="member-id" value="Auto-generated" readOnly aria-describedby="member-id-help" />
-              </Field>
             </div>
           </Section>
 
           <Section id="membership-details" title="Membership Details">
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               <Field id="member-plan" label="Subscription Plan" required help={
-                plansQuery.isError ? <span role="alert">Couldn&apos;t load plans. <button type="button" onClick={() => void plansQuery.refetch()} className="font-semibold text-black underline">Try again</button></span>
-                  : !plansQuery.isPending && options.length === 0 ? <span>No active plans with durations. <Link href="/dashboard/plans" className="font-semibold text-black underline">Manage plans</Link></span> : undefined
+                plansQuery.isError ? <span role="alert">Couldn&apos;t load plans. <button type="button" onClick={() => void plansQuery.refetch()} className="font-semibold text-foreground underline">Try again</button></span>
+                  : !plansQuery.isPending && plans.length === 0 ? <span>No active plans available. <Link href="/dashboard/plans" className="font-semibold text-foreground underline">Manage plans</Link></span> : undefined
               }>
-                <select id="member-plan" name="planDurationId" value={durationId} onChange={(event) => { setDurationId(event.target.value); setSpecialDiscount(""); setReceived("") }} required disabled={plansQuery.isPending || plansQuery.isError || options.length === 0} aria-describedby={plansQuery.isError || options.length === 0 ? "member-plan-help" : undefined} className={controlClassName}>
+                <select id="member-plan" name="planId" value={planId} onChange={(event) => { setPlanId(event.target.value); setSpecialDiscount(""); setReceived("") }} required disabled={plansQuery.isPending || plansQuery.isError || plans.length === 0} aria-describedby={plansQuery.isError || plans.length === 0 ? "member-plan-help" : undefined} className={controlClassName}>
                   <option value="" disabled>{plansQuery.isPending ? "Loading plans…" : "Select a plan"}</option>
-                  {options.map(({ plan, duration }) => <option key={duration.id} value={duration.id}>{plan.name} ({duration.durationMonths} {duration.durationMonths === 1 ? "Month" : "Months"})</option>)}
+                  {plans.map((plan) => <option key={plan.id} value={plan.id}>{plan.name}</option>)}
                 </select>
-                <input type="hidden" name="planId" value={selected?.plan.id ?? ""} />
               </Field>
               <Field id="member-start-date" label="Membership Start Date" required>
                 <MemberInput id="member-start-date" name="startDate" type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} required max="9999-01-01" />
               </Field>
-              <Field id="member-expiry-date" label="Membership Expiry Date" help="Auto-calculated based on plan duration.">
-                <MemberInput id="member-expiry-date" name="expiryDate" type="date" value={expiryDate} readOnly aria-describedby="member-expiry-date-help" />
+              <Field id="member-duration" label="Membership Duration" required>
+                <select id="member-duration" name="durationMonths" value={durationMonths} onChange={(event) => { setDurationMonths(Number(event.target.value)); setSpecialDiscount(""); setReceived("") }} required className={controlClassName}>
+                  {Array.from({ length: 12 }, (_, index) => index + 1).map((months) => <option key={months} value={months}>{months} {months === 1 ? "Month" : "Months"}</option>)}
+                </select>
               </Field>
               <fieldset className="min-w-0 space-y-1.5">
                 <legend className="text-sm font-medium">Trainer Required?</legend>
@@ -145,7 +183,7 @@ export function AddMemberForm() {
                 </div>
               </fieldset>
               <Field id="member-trainer" label="Trainer Selection" required={trainerRequired} help={trainerRequired ? (
-                trainersQuery.isError ? <span role="alert">Couldn&apos;t load trainers. <button type="button" onClick={() => void trainersQuery.refetch()} className="font-semibold text-black underline">Try again</button></span>
+                trainersQuery.isError ? <span role="alert">Couldn&apos;t load trainers. <button type="button" onClick={() => void trainersQuery.refetch()} className="font-semibold text-foreground underline">Try again</button></span>
                   : !trainersQuery.isPending && trainers.length === 0 ? "No active trainers available. Select No or add an active trainer." : undefined
               ) : undefined}>
                 <select key={String(trainerRequired)} id="member-trainer" name="trainerId" defaultValue="" required={trainerRequired} disabled={!trainerRequired || trainersQuery.isPending || trainersQuery.isError || trainers.length === 0} aria-describedby={trainerRequired && (trainersQuery.isError || trainers.length === 0) ? "member-trainer-help" : undefined} className={controlClassName}>
@@ -161,7 +199,7 @@ export function AddMemberForm() {
               <Field id="member-payment-date" label="Payment Date" required>
                 <MemberInput id="member-payment-date" name="paymentDate" type="date" defaultValue={today()} max={today()} required />
               </Field>
-              <Field id="member-plan-amount" label="Plan Amount" help="Includes the plan duration discount.">
+              <Field id="member-plan-amount" label="Plan Amount" help="Includes any discount configured for the selected duration.">
                 <MemberInput id="member-plan-amount" value={money(amounts.planAmount)} readOnly aria-describedby="member-plan-amount-help" />
               </Field>
               <Field id="member-discount" label="Special Discount" optional>
@@ -191,17 +229,17 @@ export function AddMemberForm() {
         </div>
 
         <div className="min-w-0 space-y-6">
-          <aside aria-labelledby="membership-summary-title" className="overflow-hidden rounded-2xl border bg-white">
+          <aside aria-labelledby="membership-summary-title" className="overflow-hidden rounded-2xl border bg-card">
             <div className="border-b px-5 py-4">
               <h2 id="membership-summary-title" className="font-heading text-base font-semibold">Membership Summary</h2>
             </div>
-            <div className="flex flex-col items-center gap-2 bg-neutral-100 px-5 py-6 text-center">
-              <Image src={defaultAvatar} alt="" width={96} height={96} className="size-24 shrink-0 rounded-full border-4 border-white bg-neutral-200 object-cover" />
+            <div className="flex flex-col items-center gap-2 bg-muted px-5 py-6 text-center">
+              <Image src={defaultAvatar} alt="" width={96} height={96} className="size-24 shrink-0 rounded-full border-4 border-card bg-muted object-cover" />
               <p className="w-full font-heading text-base font-semibold [overflow-wrap:anywhere]">{fullName.trim() || "Member Name"}</p>
               <p className="w-full text-sm text-muted-foreground [overflow-wrap:anywhere]">{email.trim() || "Email address"}</p>
             </div>
             <dl className="space-y-2.5 border-b px-5 py-4">
-              <SummaryRow label="Subscription Plan">{selected?.plan.name ?? "—"}</SummaryRow>
+              <SummaryRow label="Subscription Plan">{selected?.name ?? "—"}</SummaryRow>
               <SummaryRow label="Start Date">{displayDate(startDate)}</SummaryRow>
               <SummaryRow label="Expiry Date">{displayDate(expiryDate)}</SummaryRow>
               <SummaryRow label="Duration">{durationLabel}</SummaryRow>
@@ -222,14 +260,22 @@ export function AddMemberForm() {
           </aside>
           <div className="space-y-3">
             <div className="flex flex-wrap items-center justify-end gap-2">
-              <Link href="/dashboard/members" className={cn(buttonVariants({ variant: "outline", size: "lg" }), "bg-white text-black")}>Cancel</Link>
-              <Button type="submit" size="lg" disabled={!canSubmit} className={primaryButtonClassName}><Plus aria-hidden="true" className="size-4" />Add Member</Button>
+              <Link href="/dashboard/members" className={cn(buttonVariants({ variant: "outline", size: "lg" }), "bg-card text-foreground")}>Cancel</Link>
+              <Button type="submit" size="lg" disabled={!canSubmit} className={primaryButtonClassName}>
+                {mutation.isPending ? <Loader2 aria-hidden="true" className="size-4 animate-spin" /> : <Plus aria-hidden="true" className="size-4" />}
+                {mutation.isPending ? "Saving…" : mutation.isSuccess ? "Member Added" : "Add Member"}
+              </Button>
             </div>
-            <p className="text-right text-xs text-muted-foreground">Preview only. Details won&apos;t be saved.</p>
-            {previewComplete ? <p role="status" className="flex items-start gap-2 rounded-xl border bg-white p-3 text-sm"><CheckCircle2 className="mt-0.5 size-4 shrink-0" />Member details are ready. This is a preview; no member has been saved.</p> : null}
+            {mutation.isError ? <p role="alert" className="rounded-xl border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/50 p-3 text-sm text-red-700 dark:text-red-400">{mutation.error.message}</p> : null}
           </div>
         </div>
-      </div>
+      </fieldset>
+      {mutation.isSuccess ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/50 p-4">
+          <p role="status" className="flex items-center gap-2 text-sm text-emerald-800 dark:text-emerald-400"><CheckCircle2 aria-hidden="true" className="size-4" />{mutation.data.member.name} was added successfully.</p>
+          <Button type="button" variant="outline" onClick={resetForm}>Add another member</Button>
+        </div>
+      ) : null}
     </form>
   )
 }

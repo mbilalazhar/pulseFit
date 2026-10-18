@@ -25,7 +25,7 @@ export function PricingDurations() {
   } = usePlanForm()
 
   return (
-    <section className="space-y-4 rounded-2xl border bg-white p-5">
+    <section className="space-y-4 rounded-2xl border bg-card p-5">
       <h2 className="font-heading text-base font-semibold">
         Pricing &amp; Durations
       </h2>
@@ -35,7 +35,7 @@ export function PricingDurations() {
           <label htmlFor="base-price" className="text-sm font-medium">
             Base Price
           </label>
-          <div className="flex h-11 items-center gap-3 rounded-xl border border-input bg-white pl-1.5 pr-3.5 focus-within:border-primary focus-within:ring-3 focus-within:ring-primary/20">
+          <div className="flex h-11 items-center gap-3 rounded-xl border border-input bg-card pl-1.5 pr-3.5 focus-within:border-primary focus-within:ring-3 focus-within:ring-primary/20">
             <select
               id="currency"
               aria-label="Currency"
@@ -67,7 +67,7 @@ export function PricingDurations() {
           <label htmlFor="max-hours-per-day" className="text-sm font-medium">
             Maximum Gym Hours / Day
           </label>
-          <div className="flex h-11 items-center gap-3 rounded-xl border border-input bg-white px-3.5 focus-within:border-primary focus-within:ring-3 focus-within:ring-primary/20">
+          <div className="flex h-11 items-center gap-3 rounded-xl border border-input bg-card px-3.5 focus-within:border-primary focus-within:ring-3 focus-within:ring-primary/20">
             <input
               id="max-hours-per-day"
               type="number"

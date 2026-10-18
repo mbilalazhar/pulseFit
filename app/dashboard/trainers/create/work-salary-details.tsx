@@ -35,7 +35,7 @@ export function WorkSalaryDetails() {
   } = useTrainerForm()
 
   return (
-    <section className="space-y-4 rounded-2xl border bg-white p-5">
+    <section className="space-y-4 rounded-2xl border bg-card p-5">
       <SectionHeading title="Work &amp; Compensation Details" />
 
       {/* Trainer Type Selector */}
@@ -76,7 +76,7 @@ export function WorkSalaryDetails() {
             <FieldLabel htmlFor="trainer-salary" required>
               Monthly Salary (PKR)
             </FieldLabel>
-            <div className="flex h-11 items-center rounded-sm border border-input bg-white px-3.5 focus-within:border-primary focus-within:ring-3 focus-within:ring-primary/20">
+            <div className="flex h-11 items-center rounded-sm border border-input bg-card px-3.5 focus-within:border-primary focus-within:ring-3 focus-within:ring-primary/20">
               <span className="mr-2 text-sm text-muted-foreground">PKR</span>
               <input
                 id="trainer-salary"
@@ -176,7 +176,7 @@ export function WorkSalaryDetails() {
               <FieldLabel htmlFor="contractor-price" required>
                 {pricingModel === "fixed" ? "Monthly Fee (PKR)" : "Price per Session (PKR)"}
               </FieldLabel>
-              <div className="flex h-11 items-center rounded-sm border border-input bg-white px-3.5 focus-within:border-primary focus-within:ring-3 focus-within:ring-primary/20">
+              <div className="flex h-11 items-center rounded-sm border border-input bg-card px-3.5 focus-within:border-primary focus-within:ring-3 focus-within:ring-primary/20">
                 <span className="mr-2 text-sm text-muted-foreground">PKR</span>
                 <input
                   id="contractor-price"

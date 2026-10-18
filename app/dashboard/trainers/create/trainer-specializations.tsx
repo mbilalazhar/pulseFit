@@ -27,7 +27,7 @@ export function TrainerSpecializations() {
   const atLimit = specializations.length >= MAX_SPECIALIZATIONS
 
   return (
-    <section className="space-y-5 rounded-2xl border bg-white p-5">
+    <section className="space-y-5 rounded-2xl border bg-card p-5">
       <SectionHeading title="Specializations &amp; Certifications" />
 
       {/* Specializations — capped so a trainer reads as a specialist, not a list. */}
@@ -60,8 +60,8 @@ export function TrainerSpecializations() {
                   "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors",
                   selected
                     ? "border-accent bg-accent/10 text-accent"
-                    : "border-input bg-white text-foreground hover:border-accent hover:bg-accent/5",
-                  !selected && atLimit && "cursor-not-allowed opacity-40 hover:border-input hover:bg-white",
+                    : "border-input bg-card text-foreground hover:border-accent hover:bg-accent/5",
+                  !selected && atLimit && "cursor-not-allowed opacity-40 hover:border-input hover:bg-card",
                 )}
               >
                 {selected ? <Check className="size-3.5" strokeWidth={3} /> : null}

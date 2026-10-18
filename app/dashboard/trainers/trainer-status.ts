@@ -4,8 +4,8 @@ import type { TrainerStatus } from "@/lib/services/trainer.services"
    renders in two different colours. */
 
 export const STATUS_BADGE: Record<TrainerStatus, string> = {
-  ACTIVE: "bg-green-100 text-green-700",
-  ON_LEAVE: "bg-orange-100 text-orange-700",
+  ACTIVE: "bg-green-100 dark:bg-green-950/50 text-green-700 dark:text-green-400",
+  ON_LEAVE: "bg-orange-100 dark:bg-orange-950/50 text-orange-700 dark:text-orange-400",
   INACTIVE: "bg-muted text-muted-foreground",
 }
 

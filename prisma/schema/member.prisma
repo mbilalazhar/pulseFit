@@ -11,16 +11,28 @@ model Member {
   name      String
   phone     String
   email     String?
-  status    MemberStatus @default(ACTIVE)
+  status    MemberStatus @default(INACTIVE)
   joinedAt  DateTime     @default(now())
   createdAt DateTime     @default(now())
 
+  // Nullable for members created before membership details were collected.
+  // The creation API requires a plan, start date, and purchased duration.
+  planId         String?
+  startDate      DateTime? @db.Date
+  durationMonths Int? // Snapshot of the purchased duration, independent of later plan edits.
+  trainerId      String?
+
   gym           Gym                  @relation(fields: [gymId], references: [id])
   user          User?                @relation(fields: [userId], references: [id])
+  plan          Plan?                @relation(fields: [planId], references: [id], onDelete: Restrict)
+  trainer       Trainer?             @relation(fields: [trainerId], references: [id], onDelete: SetNull)
   subscriptions MemberSubscription[]
   payments      Payment[]
+  attendance    Attendance[]
 
   @@unique([gymId, email])
   @@index([gymId, status, joinedAt])
   @@index([gymId, phone])
+  @@index([planId])
+  @@index([trainerId])
 }

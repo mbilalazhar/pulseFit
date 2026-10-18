@@ -99,7 +99,7 @@ export function PlanCard({ plan }: { plan: PlanSummary }) {
     : plan.durations.slice(0, VISIBLE_LIMIT)
 
   return (
-    <div className="relative flex flex-col rounded-2xl border bg-white p-5">
+    <div className="relative flex flex-col rounded-2xl border bg-card p-5">
       {/* Title + status */}
       <div className="flex items-start justify-between gap-2">
         <h3 className="font-heading text-lg font-bold tracking-tight">{plan.name}</h3>

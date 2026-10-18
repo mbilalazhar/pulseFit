@@ -1,7 +1,7 @@
 import { Layers } from "lucide-react"
 export function EmptyState() {
   return (
-    <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed bg-white px-6 py-16 text-center">
+    <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed bg-card px-6 py-16 text-center">
       <span className="flex size-16 items-center justify-center rounded-full bg-accent/10 text-accent">
         <Layers className="size-7" />
       </span>

@@ -24,6 +24,7 @@ import {
   Users,
   User,
   ClipboardList,
+  CalendarCheck,
   Wallet,
   CreditCard,
   BarChart3,
@@ -35,6 +36,7 @@ import {
   type LucideIcon,
 } from "lucide-react"
 import logo from "@/assets/logo.svg"
+import darkLogo from "@/assets/logo-dark.svg"
 import { cn } from "@/lib/utils"
 
 type NavItem = {
@@ -49,6 +51,7 @@ const mainNav: NavItem[] = [
   { label: "Trainers", href: "/dashboard/trainers", icon: User },
   { label: "Plans", href: "/dashboard/plans", icon: ClipboardList },
   { label: "Memberships", href: "/dashboard/memberships", icon: Wallet },
+  { label: "Attendance", href: "/dashboard/attendance", icon: CalendarCheck },
   { label: "Payments", href: "/dashboard/payments", icon: CreditCard },
   { label: "Reports", href: "/dashboard/reports", icon: BarChart3 },
   { label: "Settings", href: "/dashboard/settings", icon: Settings },
@@ -160,7 +163,7 @@ export function Sidebar() {
         onClick={() => setOpen(true)}
         aria-label="Open menu"
         aria-expanded={open}
-        className="fixed left-4 top-3.5 z-50 flex size-9 items-center justify-center rounded-lg bg-white text-foreground/70 transition-colors hover:bg-muted hover:text-foreground lg:hidden"
+        className="fixed left-4 top-3.5 z-50 flex size-9 items-center justify-center rounded-lg bg-card text-foreground/70 transition-colors hover:bg-muted hover:text-foreground lg:hidden"
       >
         <Menu className="size-5" />
       </button>
@@ -184,7 +187,7 @@ export function Sidebar() {
       {/* Sidebar: static on lg+, sliding drawer below lg */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex h-svh w-64 flex-col border-r bg-white transition-transform duration-300 ease-in-out",
+          "fixed inset-y-0 left-0 z-50 flex h-svh w-64 flex-col border-r bg-sidebar transition-transform duration-300 ease-in-out",
           "lg:sticky lg:top-0 lg:z-auto lg:translate-x-0 lg:transition-none",
           open ? "translate-x-0" : "-translate-x-full",
         )}
@@ -196,7 +199,8 @@ export function Sidebar() {
             onClick={closeDrawer}
             aria-label="PulseFit home"
           >
-            <Image src={logo} alt="PulseFit" priority className="h-7 w-auto" />
+            <Image src={logo} alt="PulseFit" priority className="h-7 w-auto dark:hidden" />
+            <Image src={darkLogo} alt="PulseFit" priority className="hidden h-7 w-auto dark:block" />
           </Link>
           <button
             type="button"

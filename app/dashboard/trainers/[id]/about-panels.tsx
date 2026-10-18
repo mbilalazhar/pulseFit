@@ -11,7 +11,7 @@ function Panel({
   children: React.ReactNode
 }) {
   return (
-    <section className="flex flex-col rounded-2xl border bg-white p-5">
+    <section className="flex flex-col rounded-2xl border bg-card p-5">
       <div className="mb-3 flex items-center justify-between gap-3">
         <h3 className="font-heading text-base font-semibold">{title}</h3>
         {action}

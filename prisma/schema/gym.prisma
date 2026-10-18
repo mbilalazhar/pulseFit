@@ -18,4 +18,5 @@ model Gym {
   trainers            Trainer[]
   memberSubscriptions MemberSubscription[]
   payments            Payment[]
+  attendance          Attendance[]
 }

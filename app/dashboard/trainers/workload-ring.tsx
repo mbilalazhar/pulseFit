@@ -25,7 +25,7 @@ export function WorkloadRing({ percent, label }: WorkloadRingProps) {
             cy="50"
             r={radius}
             fill="none"
-            stroke="#E5E7EB"
+            stroke="var(--muted)"
             strokeWidth="10"
           />
           <circle

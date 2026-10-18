@@ -18,7 +18,7 @@ export function PlanList() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center gap-2 rounded-2xl border bg-white py-16 text-sm text-muted-foreground">
+      <div className="flex items-center justify-center gap-2 rounded-2xl border bg-card py-16 text-sm text-muted-foreground">
         <Loader2Icon className="size-4 animate-spin" />
         Loading plans...
       </div>
@@ -52,7 +52,7 @@ export function PlanList() {
       {/* Stat cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((s) => (
-          <div key={s.label} className="flex items-start gap-3 rounded-2xl border bg-white p-4">
+          <div key={s.label} className="flex items-start gap-3 rounded-2xl border bg-card p-4">
             <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent">
               <s.icon className="size-5" />
             </span>

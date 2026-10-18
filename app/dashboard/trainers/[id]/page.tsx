@@ -55,8 +55,8 @@ export default async function TrainerDetailPage(
       <AboutPanels trainer={trainer} />
       <MetricsStrip trainer={trainer} />
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
-        <WeeklySchedule trainer={trainer} />
+      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1.7fr)_minmax(280px,1fr)]">
+        <WeeklySchedule key={trainer.id} trainerName={trainer.fullName} />
         <PackagesTable trainer={trainer} />
       </div>
     </div>

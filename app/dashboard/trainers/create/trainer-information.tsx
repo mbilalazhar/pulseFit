@@ -8,7 +8,7 @@ export function TrainerInformation() {
   const { fullName, setFullName, email, setEmail, phone, setPhone } = useTrainerForm()
 
   return (
-    <section className="space-y-4 rounded-2xl border bg-white p-5">
+    <section className="space-y-4 rounded-2xl border bg-card p-5">
       <SectionHeading title="Trainer Information" />
 
       <div className="grid gap-4 sm:grid-cols-3">
@@ -43,7 +43,7 @@ export function TrainerInformation() {
           <FieldLabel htmlFor="trainer-phone" required>
             Phone Number
           </FieldLabel>
-          <div className="flex h-11 items-center rounded-sm border border-input bg-white px-3.5 focus-within:border-primary focus-within:ring-3 focus-within:ring-primary/20">
+          <div className="flex h-11 items-center rounded-sm border border-input bg-card px-3.5 focus-within:border-primary focus-within:ring-3 focus-within:ring-primary/20">
             <span className="mr-2 shrink-0 border-r pr-2.5 text-sm text-muted-foreground">
               PK +92
             </span>

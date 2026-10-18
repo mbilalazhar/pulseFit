@@ -7,7 +7,7 @@ export function PlanStatus() {
   const { status, setStatus } = usePlanForm()
 
   return (
-    <section className="space-y-3 rounded-2xl border bg-white p-5">
+    <section className="space-y-3 rounded-2xl border bg-card p-5">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="font-heading text-base font-semibold">Plan Status</h2>

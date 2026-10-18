@@ -21,6 +21,7 @@ model Plan {
   features            PlanFeature[]
   durations           PlanDuration[]
   memberSubscriptions MemberSubscription[]
+  members             Member[]
 
   @@unique([gymId, name])
   @@index([gymId, status])

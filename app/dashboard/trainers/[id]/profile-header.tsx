@@ -42,7 +42,7 @@ export function ProfileHeader({ trainer }: { trainer: TrainerDetail }) {
   const role = trainer.trainerType === "CONTRACTOR" ? "Private Contractor" : "Personal Trainer"
 
   return (
-    <section className="rounded-2xl border bg-white p-6">
+    <section className="rounded-2xl border bg-card p-6">
       {/* Status sits where the Edit / Actions controls would go. */}
       <div className="flex justify-end">
         <span
@@ -63,7 +63,7 @@ export function ProfileHeader({ trainer }: { trainer: TrainerDetail }) {
             src={trainer.profilePhotoUrl}
             alt={trainer.fullName}
             size={120}
-            className="size-28 rounded-2xl bg-gray-100"
+            className="size-28 rounded-2xl bg-muted"
           />
           <div className="min-w-0 space-y-2">
             <div className="flex items-center gap-2">
@@ -116,28 +116,28 @@ export function ProfileHeader({ trainer }: { trainer: TrainerDetail }) {
         {/* Key dates and figures */}
         <div className="grid grid-cols-1 gap-5 rounded-xl border p-4 sm:grid-cols-2">
           <InfoTile
-            icon={<CalendarDays className="size-4 text-rose-600" />}
-            iconClass="bg-rose-50"
+            icon={<CalendarDays className="size-4 text-rose-600 dark:text-rose-400" />}
+            iconClass="bg-rose-50 dark:bg-rose-950/50"
             label="Joining Date"
             value={formatDate(trainer.joiningDate)}
           />
           <InfoTile
             icon={<Star className="size-4 text-amber-500" />}
-            iconClass="bg-amber-50"
+            iconClass="bg-amber-50 dark:bg-amber-950/50"
             label="Years of Experience"
             value={formatYears(trainer.yearsExperience)}
           />
           {/* No salary payment records exist yet. */}
           <InfoTile
-            icon={<Wallet className="size-4 text-emerald-600" />}
-            iconClass="bg-emerald-50"
+            icon={<Wallet className="size-4 text-emerald-600 dark:text-emerald-400" />}
+            iconClass="bg-emerald-50 dark:bg-emerald-950/50"
             label="Last Salary Paid"
             value={NOT_TRACKED}
             note="Not tracked yet"
           />
           <InfoTile
-            icon={<CalendarClock className="size-4 text-sky-600" />}
-            iconClass="bg-sky-50"
+            icon={<CalendarClock className="size-4 text-sky-600 dark:text-sky-400" />}
+            iconClass="bg-sky-50 dark:bg-sky-950/50"
             label="Next Salary Date"
             value={NOT_TRACKED}
             note="Not tracked yet"

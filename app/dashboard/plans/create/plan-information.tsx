@@ -23,7 +23,7 @@ export function PlanInformation() {
   } = usePlanForm()
 
   return (
-    <section className="space-y-4 rounded-2xl border bg-white p-5">
+    <section className="space-y-4 rounded-2xl border bg-card p-5">
       <h2 className="font-heading text-base font-semibold">Plan Information</h2>
 
       <div className="flex flex-col gap-4 sm:flex-row">

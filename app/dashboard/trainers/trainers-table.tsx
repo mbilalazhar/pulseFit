@@ -74,18 +74,19 @@ export function TrainersTable() {
   }
 
   return (
-    <div>
+    <section aria-label="Trainer directory" className="min-w-0 space-y-3">
       {/* Tabs */}
-      <div className="flex gap-1">
+      <div className="flex min-w-0 gap-1 overflow-x-auto border-b border-border/80">
         {TABS.map((tab) => (
           <button
             key={tab.value}
             type="button"
+            aria-pressed={activeTab === tab.value}
             onClick={() => handleTabChange(tab.value)}
             className={cn(
-              "border-b-2 px-4 py-3 text-sm font-medium transition-colors",
+              "shrink-0 whitespace-nowrap border-b-2 px-3 py-3 text-xs transition-colors focus-visible:outline-2 focus-visible:outline-accent",
               activeTab === tab.value
-                ? "border-accent text-accent"
+                ? "border-rose-500 font-semibold text-rose-600 dark:text-rose-400"
                 : "border-transparent text-muted-foreground hover:text-foreground",
             )}
           >
@@ -94,109 +95,113 @@ export function TrainersTable() {
         ))}
       </div>
 
-      {/* Column labels */}
-      <div
-        className={cn(
-          ROW_GRID,
-          "px-4 pt-6 pb-3 text-xs font-medium tracking-wide text-muted-foreground uppercase",
-        )}
-      >
-        <span>Trainer</span>
-        <span>Contact Number</span>
-        <span>Status</span>
-        <span>Members</span>
-        <span>Workload</span>
-        <span>Work Hours</span>
-        <span>Packages</span>
-        <span />
-      </div>
+      <div className="overflow-x-auto rounded-xl">
+        <div className="min-w-[1060px]">
+          {/* Column labels */}
+          <div
+            className={cn(
+              ROW_GRID,
+              "px-4 pt-1 pb-1.5 text-[10px] font-medium tracking-wide text-muted-foreground uppercase",
+            )}
+          >
+            <span>Trainer</span>
+            <span>Contact Number</span>
+            <span>Status</span>
+            <span>Members</span>
+            <span>Workload</span>
+            <span>Work Hours</span>
+            <span>Packages</span>
+            <span />
+          </div>
 
-      {/* Rows */}
-      {paginatedTrainers.length > 0 ? (
-        <div>
-          {paginatedTrainers.map((trainer) => {
-            const hours = schedule(trainer)
-            return (
-              <Link
-                key={trainer.id}
-                href={`/dashboard/trainers/${trainer.id}`}
-                className={cn(
-                  ROW_GRID,
-                  "group relative rounded-sm border-b px-4 py-4 text-sm",
-                  "transition-[transform,box-shadow,background-color,border-color] duration-200 ease-out",
-                  /* Lift the row out of the list on hover. */
-                  "hover:z-10 hover:-translate-y-1 hover:border-transparent hover:bg-white hover:shadow-lg hover:shadow-black/10",
-                )}
-              >
-                {/* Trainer — avatar, name and email grow together on hover. */}
-                <div className="flex origin-left items-center gap-3 transition-transform duration-200 ease-out group-hover:scale-105">
-                  <TrainerAvatar
-                    src={trainer.profilePhotoUrl}
-                    alt={trainer.fullName}
-                    size={40}
-                    className="size-10"
-                  />
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="truncate font-medium text-foreground">{trainer.fullName}</p>
-                      {trainer.trainerType === "CONTRACTOR" ? (
-                        <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
-                          Contractor
-                        </span>
-                      ) : null}
-                    </div>
-                    <p className="truncate text-xs text-muted-foreground">{trainer.email}</p>
-                  </div>
-                </div>
-
-                {/* Contact Number */}
-                <span className="text-foreground">{trainer.contactNumber}</span>
-
-                {/* Status */}
-                <span>
-                  <span
+          {/* Rows */}
+          {paginatedTrainers.length > 0 ? (
+            <div className="space-y-1">
+              {paginatedTrainers.map((trainer) => {
+                const hours = schedule(trainer)
+                return (
+                  <Link
+                    key={trainer.id}
+                    href={`/dashboard/trainers/${trainer.id}`}
                     className={cn(
-                      "inline-block rounded-full px-3 py-1 text-xs font-medium",
-                      STATUS_BADGE[trainer.status],
+                      ROW_GRID,
+                      "group relative rounded-sm px-4 py-4 text-[13px]",
+                      "transition-[transform,box-shadow,background-color,border-color] duration-200 ease-out",
+                      /* Lift the row out of the list on hover. */
+                      "hover:z-10 hover:-translate-y-1 hover:border-transparent hover:bg-card hover:shadow-lg hover:shadow-black/10",
                     )}
                   >
-                    {STATUS_LABEL[trainer.status]}
-                  </span>
-                </span>
+                    {/* Trainer */}
+                    <div className="flex min-w-0 items-center gap-3">
+                      <TrainerAvatar
+                        src={trainer.profilePhotoUrl}
+                        alt={trainer.fullName}
+                        size={38}
+                        className="size-[38px]"
+                      />
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="truncate font-semibold text-foreground">{trainer.fullName}</p>
+                          {trainer.trainerType === "CONTRACTOR" ? (
+                            <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                              Contractor
+                            </span>
+                          ) : null}
+                        </div>
+                        <p className="mt-0.5 truncate text-xs text-muted-foreground">{trainer.email}</p>
+                      </div>
+                    </div>
 
-                {/* Members — no trainer/member relation exists yet. */}
-                <span className="font-medium text-foreground">0</span>
+                    {/* Contact Number */}
+                    <span className="text-foreground">{trainer.contactNumber}</span>
 
-                {/* Workload — derived from members, so also unavailable. */}
-                <span className="text-muted-foreground">—</span>
+                    {/* Status */}
+                    <span>
+                      <span
+                        className={cn(
+                          "inline-block rounded-full px-3 py-1 text-xs font-medium",
+                          STATUS_BADGE[trainer.status],
+                        )}
+                      >
+                        {STATUS_LABEL[trainer.status]}
+                      </span>
+                    </span>
 
-                {/* Work Hours */}
-                <span>
-                  <span className="block text-foreground">{hours.primary}</span>
-                  <span className="mt-1 block text-xs text-muted-foreground">
-                    {hours.secondary}
-                  </span>
-                </span>
+                    {/* Members — no trainer/member relation exists yet. */}
+                    <span className="font-medium text-foreground">0</span>
 
-                {/* Packages */}
-                <span className="font-medium text-foreground">{trainer.packageCount}</span>
+                    {/* Workload — derived from members, so also unavailable. */}
+                    <span className="text-muted-foreground">—</span>
 
-                {/* Reveal-on-hover affordance */}
-                <ArrowRight
-                  className="size-5 -translate-x-2 text-accent opacity-0 transition-[opacity,transform] duration-200 ease-out group-hover:translate-x-0 group-hover:opacity-100"
-                  strokeWidth={2.5}
-                />
-              </Link>
-            )
-          })}
+                    {/* Work Hours */}
+                    <span>
+                      <span className="block text-foreground">{hours.primary}</span>
+                      <span className="mt-0.5 block text-xs text-muted-foreground">
+                        {hours.secondary}
+                      </span>
+                    </span>
+
+                    {/* Packages */}
+                    <span className="font-medium text-foreground">{trainer.packageCount}</span>
+
+                    {/* Reveal-on-hover affordance */}
+                    <ArrowRight
+                      className="size-4 -translate-x-2 text-accent opacity-0 transition-[opacity,transform] duration-200 ease-out group-hover:translate-x-0 group-hover:opacity-100"
+                      strokeWidth={2.5}
+                    />
+                  </Link>
+                )
+              })}
+            </div>
+          ) : (
+            <p className="border-b px-4 py-10 text-center text-sm text-muted-foreground">
+              {trainers.length === 0
+                ? "No trainers added yet."
+                : "No trainers in this category."}
+            </p>
+          )}
         </div>
-      ) : (
-        <p className="border-b px-4 py-10 text-center text-sm text-muted-foreground">
-          {trainers.length === 0
-            ? "No trainers added yet."
-            : "No trainers in this category."}
-        </p>
-      )}
+      </div>
 
       {/* Pagination — only once the list outgrows a single page. */}
       {showPagination ? (
@@ -239,6 +244,6 @@ export function TrainersTable() {
           </button>
         </div>
       ) : null}
-    </div>
+    </section>
   )
 }

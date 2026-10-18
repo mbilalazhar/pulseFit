@@ -8,8 +8,8 @@ import {
 } from "./trainer-detail-logic"
 
 const TYPE_BADGE: Record<TrainerDetail["packages"][number]["type"], string> = {
-  TRAINING: "bg-blue-100 text-blue-700",
-  CONSULTATION: "bg-green-100 text-green-700",
+  TRAINING: "bg-blue-100 dark:bg-blue-950/50 text-blue-700 dark:text-blue-400",
+  CONSULTATION: "bg-green-100 dark:bg-green-950/50 text-green-700 dark:text-green-400",
 }
 
 const TYPE_LABEL: Record<TrainerDetail["packages"][number]["type"], string> = {
@@ -24,7 +24,7 @@ export function PackagesTable({ trainer }: { trainer: TrainerDetail }) {
   const { packages } = trainer
 
   return (
-    <section className="flex flex-col rounded-2xl border bg-white p-5">
+    <section className="flex flex-col rounded-2xl border bg-card p-5">
       <div className="mb-3 flex items-center justify-between gap-3">
         <h3 className="font-heading text-base font-semibold">Trainer Packages</h3>
         {/* No package creation flow yet — placeholder for the design. */}

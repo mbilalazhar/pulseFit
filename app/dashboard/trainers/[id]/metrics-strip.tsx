@@ -41,38 +41,38 @@ export function MetricsStrip({ trainer }: { trainer: TrainerDetail }) {
   const isStaff = trainer.trainerType === "STAFF"
 
   return (
-    <div className="flex flex-wrap divide-x divide-y divide-border overflow-hidden rounded-2xl border bg-white sm:divide-y-0">
+    <div className="flex flex-wrap divide-x divide-y divide-border overflow-hidden rounded-2xl border bg-card sm:divide-y-0">
       <Metric
-        icon={<Banknote className="size-5 text-rose-600" />}
-        iconClass="bg-rose-50"
+        icon={<Banknote className="size-5 text-rose-600 dark:text-rose-400" />}
+        iconClass="bg-rose-50 dark:bg-rose-950/50"
         label="Monthly Salary"
         value={isStaff ? formatPkr(trainer.monthlySalary) : NOT_TRACKED}
         note={isStaff ? undefined : "Contractor terms"}
       />
       <Metric
-        icon={<Clock className="size-5 text-indigo-600" />}
-        iconClass="bg-indigo-50"
+        icon={<Clock className="size-5 text-indigo-600 dark:text-indigo-400" />}
+        iconClass="bg-indigo-50 dark:bg-indigo-950/50"
         label="Work Hours / Day"
         value={isStaff ? formatHours(trainer.workHoursPerDay) : NOT_TRACKED}
       />
       <Metric
-        icon={<CalendarRange className="size-5 text-emerald-600" />}
-        iconClass="bg-emerald-50"
+        icon={<CalendarRange className="size-5 text-emerald-600 dark:text-emerald-400" />}
+        iconClass="bg-emerald-50 dark:bg-emerald-950/50"
         label="Working Days"
         value={isStaff ? workingDaysLabel(trainer.workDaysPerWeek) : NOT_TRACKED}
       />
       {/* No trainer-to-member relation exists yet. */}
       <Metric
-        icon={<Users className="size-5 text-orange-600" />}
-        iconClass="bg-orange-50"
+        icon={<Users className="size-5 text-orange-600 dark:text-orange-400" />}
+        iconClass="bg-orange-50 dark:bg-orange-950/50"
         label="Total Members"
         value={NOT_TRACKED}
         note="Not tracked yet"
       />
       {/* Workload is derived from members, so it is unavailable too. */}
       <Metric
-        icon={<ChartPie className="size-5 text-sky-600" />}
-        iconClass="bg-sky-50"
+        icon={<ChartPie className="size-5 text-sky-600 dark:text-sky-400" />}
+        iconClass="bg-sky-50 dark:bg-sky-950/50"
         label="Workload"
         value={NOT_TRACKED}
         note="Not tracked yet"
