@@ -4,6 +4,7 @@ import { DraftNotice } from "../plan-notice"
 import { PlanFormProvider } from "./plan-form-context"
 import { PlanInformation } from "./plan-information"
 import { PricingDurations } from "./pricing-durations"
+import { CustomPlanFeatures } from "./custom-plan-features"
 import { PlanFeatures } from "./plan-features"
 import { PlanStatus } from "./plan-status"
 import { PlanActions } from "./plan-actions"
@@ -38,11 +39,12 @@ export default function CreatePlanPage() {
             <DraftNotice />
             <PlanInformation />
             <PricingDurations />
+            <PlanFeatures />
+            <CustomPlanFeatures />
           </div>
 
           {/* RIGHT COLUMN */}
           <div className="space-y-6">
-            <PlanFeatures />
             <PlanStatus />
             <PlanActions />
           </div>

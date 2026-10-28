@@ -14,7 +14,7 @@ model User {
 
   gym      Gym     @relation(fields: [gymId], references: [id])
   member   Member?
-  trainer  trainer?
+  trainer  Trainer?
 
   @@index([gymId, role])
 }

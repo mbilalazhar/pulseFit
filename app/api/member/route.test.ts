@@ -37,7 +37,7 @@ test("scopes members, related billing and filter plans to the signed-in gym", as
   const query = findMembers.mock.calls[0].arguments[0] as {
     where: unknown; select: { subscriptions: { where: unknown }; payments: { where: unknown } }
   }
-  assert.deepEqual(query.where, { gymId: "gym-1" })
+  assert.deepEqual(query.where, { gymId: "gym-1", deletedAt: null })
   assert.deepEqual(query.select.subscriptions.where, { gymId: "gym-1" })
   assert.deepEqual(query.select.payments.where, { gymId: "gym-1" })
   assert.deepEqual((findPlans.mock.calls[0].arguments[0] as { where: unknown }).where, { gymId: "gym-1" })

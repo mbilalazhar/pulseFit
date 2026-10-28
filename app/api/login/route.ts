@@ -35,6 +35,11 @@ export async function POST(req: Request) {
       );
     }
 
+    // Manager permissions are not configured in the current application.
+    if (user.role === "MANAGER") {
+      return NextResponse.json({ message: "Manager access is not available yet. Contact your gym administrator." }, { status: 403 });
+    }
+
     const token = await createToken({
       userId: user.id,
       gymId: user.gymId,

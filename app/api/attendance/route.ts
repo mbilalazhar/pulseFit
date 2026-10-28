@@ -14,10 +14,14 @@ export async function GET(req: Request) {
     const gym = await prisma.gym.findUnique({ where: { id: session.gymId }, select: { timeZone: true } })
     if (!gym) return NextResponse.json({ message: "Gym not found" }, { status: 404 })
     if (date && date > dateInTimeZone(gym.timeZone)) return NextResponse.json({ message: "Attendance dates cannot be in the future" }, { status: 400 })
-    const [members, records] = await Promise.all([
-      prisma.member.findMany({ where: { gymId: session.gymId }, select: { id: true, name: true, email: true, phone: true, status: true, startDate: true, createdAt: true, plan: { select: { name: true } } } }),
+    const [memberRecords, records] = await Promise.all([
+      prisma.member.findMany({ where: { gymId: session.gymId, deletedAt: null }, select: { id: true, name: true, email: true, phone: true, status: true, createdAt: true, subscriptions: { where: { status: { not: "CANCELLED" } }, orderBy: [{ createdAt: "desc" }, { id: "desc" }], select: { status: true, startDate: true, plan: { select: { name: true } } } } } }),
       prisma.attendance.findMany({ where: { gymId: session.gymId }, select: { id: true, memberId: true, attendanceDate: true, checkInAt: true, checkOutAt: true } }),
     ])
+    const members = memberRecords.map((member) => {
+      const subscription = member.subscriptions.find((item) => item.status === "ACTIVE") ?? member.subscriptions[0]
+      return { ...member, startDate: subscription?.startDate ?? null, plan: subscription?.plan ?? null }
+    })
     return NextResponse.json(buildAttendance(members, records, gym.timeZone, date), { headers: { "Cache-Control": "private, no-store" } })
   } catch (error) {
     console.error("Fetch attendance error:", error)
@@ -45,11 +49,12 @@ export async function POST(req: Request) {
     }
     const [gym, member] = await Promise.all([
       prisma.gym.findUnique({ where: { id: session.gymId }, select: { timeZone: true } }),
-      prisma.member.findFirst({ where: { id: action.memberId, gymId: session.gymId }, select: { status: true, startDate: true } }),
+      prisma.member.findFirst({ where: { id: action.memberId, gymId: session.gymId, deletedAt: null }, select: { status: true, subscriptions: { where: { status: { not: "CANCELLED" } }, orderBy: [{ createdAt: "desc" }, { id: "desc" }], select: { status: true, startDate: true } } } }),
     ])
     if (!gym || !member) return NextResponse.json({ message: "Member not found in your gym" }, { status: 404 })
     const today = dateInTimeZone(gym.timeZone, now)
-    if (!eligibleForAttendance(member, today)) return NextResponse.json({ message: "This member does not have an active membership" }, { status: 400 })
+    const subscription = member.subscriptions.find((item) => item.status === "ACTIVE") ?? member.subscriptions[0]
+    if (!eligibleForAttendance({ status: member.status, startDate: subscription?.startDate ?? null }, today)) return NextResponse.json({ message: "This member does not have an active membership" }, { status: 400 })
     await prisma.attendance.create({ data: { gymId: session.gymId, memberId: action.memberId, attendanceDate: new Date(`${today}T00:00:00Z`), checkInAt: now } })
     return NextResponse.json({ message: "Member marked present" }, { status: 201 })
   } catch (error) {

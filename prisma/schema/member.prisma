@@ -48,7 +48,16 @@ model BodyMeasurement {
   bodyFatPct   Decimal? @db.Decimal(4, 1)
   muscleMassKg Decimal? @db.Decimal(5, 2)
 
-enum GoalType { FAT_LOSS LEAN_MUSCLE ENDURANCE CONSISTENCY CUSTOM }
+  member Member @relation(fields: [memberId, gymId], references: [id, gymId])
+}
+
+enum GoalType {
+  FAT_LOSS
+  LEAN_MUSCLE
+  ENDURANCE
+  CONSISTENCY
+  CUSTOM
+}
 
 model MemberGoal {
   id          String    @id @default(cuid())

@@ -41,8 +41,8 @@ model Trainer {
   // CONTRACTOR only — the gym charges the trainer either a flat monthly fee
   // or a per-session rate, over an agreed number of sessions per week.
   contractorPaymentType ContractorPaymentType?
-  fixedFeeAmount        Int?
-  sessionRate           Int?
+  fixedFeeAmount        Int? // minor currency units
+  sessionRate           Int? // minor currency units
   sessionsPerWeek       Int?
 
   // STAFF joining date / CONTRACTOR contract start date
@@ -87,7 +87,7 @@ model TrainingPackage {
   name     String
   type     PackageType
   duration Int // session duration in minutes
-  priceMinor    Int0
+  priceMinor    Int
 
   trainerId String
   trainer   Trainer @relation(fields: [trainerId], references: [id], onDelete: Cascade)
@@ -124,7 +124,12 @@ model TrainerAvailability {
   @@index([trainerId, dayOfWeek])
 }
 
-enum SessionStatus { SCHEDULED COMPLETED CANCELED NO_SHOW }
+enum SessionStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELED
+  NO_SHOW
+}
 
 // [NEW] Booked sessions: ties member + trainer + time. Overlap blocked in constraints.sql.
 model TrainingSession {

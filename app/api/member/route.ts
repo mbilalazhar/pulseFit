@@ -16,28 +16,47 @@ export async function GET() {
 
     const [records, plans] = await Promise.all([
       prisma.member.findMany({
-        where: { gymId: session.gymId },
+        where: { gymId: session.gymId, deletedAt: null },
         orderBy: [{ createdAt: "desc" }, { id: "desc" }],
         select: {
           id: true, name: true, email: true, phone: true, status: true,
-          startDate: true, durationMonths: true, createdAt: true,
-          plan: { select: planFields },
-          trainer: { select: { id: true, fullName: true } },
+          createdAt: true,
+          assignments: {
+            where: { gymId: session.gymId, endedAt: null },
+            orderBy: [{ startedAt: "desc" }, { id: "desc" }], take: 1,
+            select: { trainer: { select: { id: true, fullName: true } } },
+          },
           subscriptions: {
             where: { gymId: session.gymId },
             orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-            select: { plan: { select: planFields }, priceMinor: true, currency: true, startDate: true, endDate: true, status: true },
+            select: { plan: { select: planFields }, finalMinor: true, durationMonths: true, currency: true, startDate: true, endDate: true, status: true },
           },
           payments: {
             where: { gymId: session.gymId },
             orderBy: [{ paidAt: "desc" }, { createdAt: "desc" }],
-            select: { amountMinor: true, paidAt: true, method: true },
+            select: { amountMinor: true, kind: true, currency: true, paidAt: true, method: true },
           },
         },
       }),
       prisma.plan.findMany({ where: { gymId: session.gymId }, select: { id: true, name: true }, orderBy: { name: "asc" } }),
     ])
-    return NextResponse.json({ ...buildMemberDirectory(records, gym.timeZone), plans }, { headers: { "Cache-Control": "private, no-store" } })
+    const directory = records.map((record) => {
+      const current = record.subscriptions.find((item) => item.status === "ACTIVE")
+        ?? record.subscriptions.find((item) => item.status !== "CANCELLED")
+      return {
+        ...record,
+        startDate: current?.startDate ?? null,
+        durationMonths: current?.durationMonths ?? null,
+        plan: current?.plan ?? null,
+        trainer: record.assignments[0]?.trainer ?? null,
+        subscriptions: record.subscriptions.map((item) => ({ ...item, priceMinor: item.finalMinor })),
+        payments: record.payments.filter((item) => item.currency === current?.currency).map((item) => ({
+          ...item, amountMinor: item.kind === "REFUND" ? -item.amountMinor : item.amountMinor,
+          method: item.method.toLowerCase(),
+        })),
+      }
+    })
+    return NextResponse.json({ ...buildMemberDirectory(directory, gym.timeZone), plans }, { headers: { "Cache-Control": "private, no-store" } })
   } catch (error) {
     console.error("Error fetching members:", error)
     return NextResponse.json({ message: "Could not load members. Please try again." }, { status: 500 })

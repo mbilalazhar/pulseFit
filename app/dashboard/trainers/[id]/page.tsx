@@ -27,7 +27,7 @@ export default async function TrainerDetailPage(
       },
       packages: {
         orderBy: { createdAt: "asc" },
-        select: { id: true, name: true, type: true, duration: true, price: true },
+        select: { id: true, name: true, type: true, duration: true, priceMinor: true },
       },
     },
   })
@@ -35,6 +35,10 @@ export default async function TrainerDetailPage(
 
   const trainer: TrainerDetail = {
     ...record,
+    monthlySalary: record.monthlySalaryMinor == null ? null : record.monthlySalaryMinor / 100,
+    fixedFeeAmount: record.fixedFeeAmount == null ? null : record.fixedFeeAmount / 100,
+    sessionRate: record.sessionRate == null ? null : record.sessionRate / 100,
+    packages: record.packages.map((item) => ({ ...item, price: item.priceMinor / 100 })),
     specializations: record.specializations.map((s) => s.specialization),
   }
 

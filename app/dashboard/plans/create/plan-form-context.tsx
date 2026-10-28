@@ -10,20 +10,19 @@ import { useRouter } from "next/navigation"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 import { createPlan } from "@/lib/services/subscription.services"
-import { createPlanSchema, PLAN_FEATURE_MAX, TRAINER_FEATURE_LABEL } from "@/lib/validators/plan"
+import { createPlanSchema, PLAN_FEATURE_MAX } from "@/lib/validators/plan"
+import { buildPlanFeatures, type PlanFacility } from "@/lib/plan-features"
 
 /* ---------- types ---------- */
 
 export type Status = "DRAFT" | "ACTIVE" | "INACTIVE"
 export type Duration = { id: string; months: number; discount: number }
-export type Feature = { id: string; text: string }
 
 /* ---------- constants ---------- */
 
 export const SHORT_MAX = 60
 export const LONG_MAX = 300
 export const FEATURE_MAX = PLAN_FEATURE_MAX
-const TRAINER_FEATURE_ID = "included-trainer"
 
 export const STATUS_OPTIONS: {
   value: Status
@@ -61,8 +60,6 @@ export const areaClass =
 
 export const countChars = (text: string) => text.length
 export const clampChars = (text: string, max: number) => text.slice(0, max)
-const capitalize = (text: string) =>
-  text.charAt(0).toUpperCase() + text.slice(1)
 
 /* Warning only (no count): amber when close to the limit, red once reached. */
 export function LimitHint({ count, max }: { count: number; max: number }) {
@@ -106,15 +103,10 @@ type PlanFormValue = {
   addDuration: () => void
   removeDuration: (id: string) => void
 
-  features: Feature[]
-  includesTrainer: boolean
-  setIncludesTrainer: (v: boolean) => void
-  addingFeature: boolean
-  setAddingFeature: (v: boolean) => void
-  featureDraft: string
-  setFeatureDraft: (v: string) => void
-  addFeature: () => void
-  removeFeature: (id: string) => void
+  facilities: PlanFacility[]
+  toggleFacility: (id: PlanFacility, included: boolean) => void
+  customFeatures: string
+  setCustomFeatures: (v: string) => void
 
   status: Status
   setStatus: (v: Status) => void
@@ -152,18 +144,12 @@ export function PlanFormProvider({ children }: { children: ReactNode }) {
   const [durMonths, setDurMonths] = useState(1)
   const [durDiscount, setDurDiscount] = useState(0)
 
-  const [features, setFeatures] = useState<Feature[]>([])
-  const [addingFeature, setAddingFeature] = useState(false)
-  const [featureDraft, setFeatureDraft] = useState("")
-
-  const includesTrainer = features.some((feature) => feature.id === TRAINER_FEATURE_ID)
-  const setIncludesTrainer = (included: boolean) => {
-    setFeatures((previous) => {
-      const remaining = previous.filter((feature) => feature.id !== TRAINER_FEATURE_ID)
-      return included
-        ? [{ id: TRAINER_FEATURE_ID, text: TRAINER_FEATURE_LABEL }, ...remaining]
-        : remaining
-    })
+  const [facilities, setFacilities] = useState<PlanFacility[]>([])
+  const [customFeatures, setCustomFeatures] = useState("")
+  const toggleFacility = (id: PlanFacility, included: boolean) => {
+    setFacilities((previous) => included
+      ? [...previous.filter((feature) => feature !== id), id]
+      : previous.filter((feature) => feature !== id))
   }
 
   const [status, setStatus] = useState<Status>("DRAFT")
@@ -191,24 +177,6 @@ export function PlanFormProvider({ children }: { children: ReactNode }) {
 
   const removeDuration = (id: string) =>
     setDurations((prev) => prev.filter((d) => d.id !== id))
-
-  const addFeature = () => {
-    const text = featureDraft.trim()
-    if (!text) return
-    if (text.toLowerCase() === TRAINER_FEATURE_LABEL.toLowerCase()) {
-      setIncludesTrainer(true)
-      setFeatureDraft("")
-      return
-    }
-    setFeatures((prev) => [
-      ...prev,
-      { id: crypto.randomUUID(), text: capitalize(text) },
-    ])
-    setFeatureDraft("")
-  }
-
-  const removeFeature = (id: string) =>
-    setFeatures((prev) => prev.filter((f) => f.id !== id))
 
   const mutation = useMutation({
     mutationFn: createPlan,
@@ -240,11 +208,6 @@ export function PlanFormProvider({ children }: { children: ReactNode }) {
       toast.error("Add at least one billing duration.")
       return
     }
-    if (features.length === 0) {
-      toast.error("Add at least one feature.")
-      return
-    }
-
     const parsed = createPlanSchema.safeParse({
       name: planName.trim(),
       shortDesc: shortDesc.trim(),
@@ -254,7 +217,7 @@ export function PlanFormProvider({ children }: { children: ReactNode }) {
       currency,
       maxHoursPerDay: maxHoursPerDay.trim() ? Number(maxHoursPerDay) : null,
       status: asDraft ? "DRAFT" : status,
-      features: features.map((f) => ({ label: f.text })),
+      features: buildPlanFeatures(facilities, customFeatures),
       durations: durations.map((d) => ({
         label: `${d.months} ${d.months === 1 ? "Month" : "Months"}`,
         durationMonths: d.months,
@@ -288,15 +251,10 @@ export function PlanFormProvider({ children }: { children: ReactNode }) {
     setDurDiscount,
     addDuration,
     removeDuration,
-    features,
-    includesTrainer,
-    setIncludesTrainer,
-    addingFeature,
-    setAddingFeature,
-    featureDraft,
-    setFeatureDraft,
-    addFeature,
-    removeFeature,
+    facilities,
+    toggleFacility,
+    customFeatures,
+    setCustomFeatures,
     status,
     setStatus,
     monthly,

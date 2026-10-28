@@ -31,7 +31,7 @@ model MemberSubscription {
   gym    Gym    @relation(fields: [gymId], references: [id])
   member Member @relation(fields: [memberId, gymId], references: [id, gymId])
   plan   Plan   @relation(fields: [planId, gymId], references: [id, gymId])
-  payments  payment[]
+  payments  Payment[]
 
   @@unique([id, gymId])
   @@index([gymId, status, endDate])
@@ -39,15 +39,25 @@ model MemberSubscription {
   @@index([memberId, status])
 }
 
-enum PaymentMethod { CASH CARD BANK_TRANSFER ONLINE OTHER }  // [NEW] was free-text String
-enum PaymentKind { PAYMENT REFUND }                          // [NEW]
+enum PaymentMethod {
+  CASH
+  CARD
+  BANK_TRANSFER
+  ONLINE
+  OTHER
+}
+
+enum PaymentKind {
+  PAYMENT
+  REFUND
+}
 
 model Payment {
   id          String   @id @default(cuid())
   gymId       String
   memberId    String
   memberSubscriptionId String                                 // [NEW] required link to what was paid for
-  kind        paymentKind   @default(PAYMENT)
+  kind        PaymentKind   @default(PAYMENT)
   amountMinor Int
   currency    String  @default("PKR")
   method      PaymentMethod
@@ -62,5 +72,5 @@ model Payment {
 
   @@index([gymId, paidAt])
   @@index([gymId, memberId, paidAt])
-  @index([memberSubscriptionId])
+  @@index([memberSubscriptionId])
 }

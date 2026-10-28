@@ -15,7 +15,7 @@ const baseTrainerSchema = {
 const staffTrainerSchema = z.object({
   ...baseTrainerSchema,
   trainerType:     z.literal("STAFF"),
-  monthlySalary:   z.number().positive("Salary must be greater than zero"),
+  monthlySalary:   z.number().positive("Salary must be greater than zero").max(21474836.47),
   workHoursPerDay: z.number().positive().max(24),
   workDaysPerWeek: z.number().int().min(1).max(7),
   shift:           z.enum(["MORNING", "EVENING", "NIGHT", "FLEXIBLE"]),
@@ -32,7 +32,7 @@ const contractorTrainerSchema = z.object({
   ...baseTrainerSchema,
   trainerType:     z.literal("CONTRACTOR"),
   paymentType:     z.enum(["FIXED_FEE", "SESSION_BASED"]),
-  amount:          z.number().positive("Amount must be greater than zero"),
+  amount:          z.number().positive("Amount must be greater than zero").max(21474836.47),
   sessionsPerWeek: z.number().int().positive("Sessions per week must be greater than zero").max(21),
 });
 

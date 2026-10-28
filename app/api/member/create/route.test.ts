@@ -2,7 +2,7 @@ import assert from "node:assert/strict"
 import { beforeEach, mock, test } from "node:test"
 
 let session: { gymId: string; userId: string; role: string } | null
-let plan: { basePriceMinor: number; currency: string; durations: { discountPercent: number }[] } | null
+let plan: { name: string; basePriceMinor: number; currency: string; durations: { discountPercent: number }[] } | null
 let trainer: { id: string } | null
 let createError: { code: string } | null
 
@@ -10,6 +10,9 @@ const tx = {
   gym: { findUnique: mock.fn(async () => ({ timeZone: "Asia/Karachi" })) },
   plan: { findFirst: mock.fn(async (args: unknown) => { void args; return plan }) },
   trainer: { findFirst: mock.fn(async (args: unknown) => { void args; return trainer }) },
+  memberSubscription: { create: mock.fn(async ({ data }: { data: Record<string, unknown> }) => ({ id: "subscription-1", ...data })) },
+  memberTrainerAssignment: { create: mock.fn(async ({ data }: { data: Record<string, unknown> }) => data) },
+  payment: { create: mock.fn(async ({ data }: { data: Record<string, unknown> }) => data) },
   member: { create: mock.fn(async ({ data }: { data: Record<string, unknown> }) => {
     if (createError) throw createError
     return { id: "member-1", ...data }
@@ -32,11 +35,14 @@ async function post(body: unknown = input) {
 
 beforeEach(() => {
   session = { gymId: "gym-1", userId: "admin-1", role: "ADMIN" }
-  plan = { basePriceMinor: 100000, currency: "PKR", durations: [{ discountPercent: 10 }] }
+  plan = { name: "Pro", basePriceMinor: 100000, currency: "PKR", durations: [{ discountPercent: 10 }] }
   trainer = { id: "trainer-1" }
   createError = null
   transaction.mock.resetCalls()
   tx.member.create.mock.resetCalls()
+  tx.memberSubscription.create.mock.resetCalls()
+  tx.memberTrainerAssignment.create.mock.resetCalls()
+  tx.payment.create.mock.resetCalls()
   tx.trainer.findFirst.mock.resetCalls()
   tx.plan.findFirst.mock.resetCalls()
 })
@@ -46,13 +52,17 @@ test("creates a member with server-owned gym, selected duration, and active stat
   assert.equal(response.status, 201)
   const { member } = await response.json()
   assert.equal(member.gymId, "gym-1")
+  assert.equal(member.planId, "plan-1")
   assert.equal(member.durationMonths, 6)
-  assert.equal(member.status, "ACTIVE")
   assert.equal(member.startDate, "2000-01-01T00:00:00.000Z")
   assert.equal(member.trainerId, "trainer-1")
+  assert.equal(tx.memberSubscription.create.mock.calls[0].arguments[0].data.durationMonths, 6)
+  assert.equal(member.status, "ACTIVE")
+  assert.deepEqual(tx.memberSubscription.create.mock.calls[0].arguments[0].data.startDate, new Date("2000-01-01"))
+  assert.equal(tx.memberTrainerAssignment.create.mock.calls[0].arguments[0].data.trainerId, "trainer-1")
   assert.deepEqual(tx.plan.findFirst.mock.calls[0].arguments[0], {
     where: { id: "plan-1", gymId: "gym-1", status: "ACTIVE" },
-    select: { basePriceMinor: true, currency: true, durations: { where: { durationMonths: 6 }, select: { discountPercent: true } } },
+    select: { name: true, basePriceMinor: true, currency: true, durations: { where: { durationMonths: 6 }, select: { discountPercent: true } } },
   })
   assert.deepEqual(tx.trainer.findFirst.mock.calls[0].arguments[0], {
     where: { id: "trainer-1", gymId: "gym-1", status: "ACTIVE" }, select: { id: true },
@@ -64,7 +74,7 @@ test("future memberships are inactive and a trainer is optional", async () => {
   assert.equal(response.status, 201)
   const { member } = await response.json()
   assert.equal(member.status, "INACTIVE")
-  assert.equal(member.trainerId, null)
+  assert.equal(tx.memberTrainerAssignment.create.mock.callCount(), 0)
   assert.equal(tx.trainer.findFirst.mock.callCount(), 0)
 })
 
@@ -105,25 +115,27 @@ test("returns conflicts for duplicate emails and deleted related records", async
 test("stores membership pricing and a partial payment together with the member", async () => {
   const response = await post({ ...input, specialDiscountMinor: 40000, amountReceivedMinor: 200000, paymentDate: "2000-01-01", paymentMethod: "cash", priceMinor: 1 })
   assert.equal(response.status, 201)
-  const data = tx.member.create.mock.calls[0].arguments[0].data
-  assert.deepEqual(data.subscriptions, { create: {
-    gymId: "gym-1", planId: "plan-1", priceMinor: 500000, discountMinor: 40000,
-    currency: "PKR", startDate: new Date("2026-01-01"), endDate: new Date("2026-06-30"), status: "ACTIVE",
-  } })
-  assert.deepEqual(data.payments, { create: {
-    gymId: "gym-1", amountMinor: 200000, method: "cash", paidAt: new Date("2000-01-01"),
-  } })
+  const data = tx.memberSubscription.create.mock.calls[0].arguments[0].data
+  assert.deepEqual(data, {
+    gymId: "gym-1", memberId: "member-1", planId: "plan-1", planNameSnapshot: "Pro",
+    durationMonths: 6, priceMinor: 540000, discountMinor: 40000, finalMinor: 500000,
+    paymentStatus: "PARTIAL", currency: "PKR", startDate: new Date("2026-01-01"), endDate: new Date("2026-06-30"), status: "ACTIVE",
+  })
+  assert.deepEqual(tx.payment.create.mock.calls[0].arguments[0].data, {
+    gymId: "gym-1", memberId: "member-1", memberSubscriptionId: "subscription-1",
+    amountMinor: 200000, currency: "PKR", method: "CASH", recordedByUserId: "admin-1", paidAt: new Date("2000-01-01"),
+  })
 })
 
 test("allows plans without predefined duration options and skips zero payments", async () => {
-  plan = { basePriceMinor: 100000, currency: "USD", durations: [] }
+  plan = { name: "Pro", basePriceMinor: 100000, currency: "USD", durations: [] }
   const response = await post({ ...input, durationMonths: 2 })
   assert.equal(response.status, 201)
-  const { member } = await response.json()
-  assert.equal(member.durationMonths, 2)
-  assert.equal(member.subscriptions.create.priceMinor, 200000)
-  assert.equal(member.subscriptions.create.currency, "USD")
-  assert.equal(tx.member.create.mock.calls[0].arguments[0].data.payments, undefined)
+  const subscription = tx.memberSubscription.create.mock.calls[0].arguments[0].data
+  assert.equal(subscription.durationMonths, 2)
+  assert.equal(subscription.finalMinor, 200000)
+  assert.equal(subscription.currency, "USD")
+  assert.equal(tx.payment.create.mock.callCount(), 0)
 })
 
 test("rejects excessive discounts, overpayments, invalid durations, and future payments", async () => {

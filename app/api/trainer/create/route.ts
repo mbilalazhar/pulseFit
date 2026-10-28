@@ -20,7 +20,7 @@ export async function POST(req: Request) {
            charges them. Only the matching half of the model is written. */
         const compensation = data.trainerType === "STAFF"
             ? {
-                monthlySalary:   data.monthlySalary,
+                monthlySalaryMinor: Math.round(data.monthlySalary * 100),
                 workHoursPerDay: data.workHoursPerDay,
                 workDaysPerWeek: data.workDaysPerWeek,
                 shift:           data.shift,
@@ -35,8 +35,8 @@ export async function POST(req: Request) {
             }
             : {
                 contractorPaymentType: data.paymentType,
-                fixedFeeAmount:        data.paymentType === "FIXED_FEE"     ? data.amount : null,
-                sessionRate:           data.paymentType === "SESSION_BASED" ? data.amount : null,
+                fixedFeeAmount:        data.paymentType === "FIXED_FEE"     ? Math.round(data.amount * 100) : null,
+                sessionRate:           data.paymentType === "SESSION_BASED" ? Math.round(data.amount * 100) : null,
                 sessionsPerWeek:       data.sessionsPerWeek,
             };
 

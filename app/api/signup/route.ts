@@ -178,7 +178,7 @@ export async function POST(req: Request) {
           gymId: gym.id,
           tier: tier as Tier,
           memberLimit: plan.memberLimit,
-          price: plan.price,
+          priceMinor: plan.price,
           status: SubscriptionStatus.TRIAL,
           startDate,
           endDate,

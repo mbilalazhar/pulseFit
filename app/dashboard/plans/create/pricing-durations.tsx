@@ -11,8 +11,6 @@ export function PricingDurations() {
     setBasePrice,
     currency,
     setCurrency,
-    maxHoursPerDay,
-    setMaxHoursPerDay,
     durations,
     durMonths,
     setDurMonths,
@@ -30,7 +28,7 @@ export function PricingDurations() {
         Pricing &amp; Durations
       </h2>
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4">
         <div className="space-y-1.5">
           <label htmlFor="base-price" className="text-sm font-medium">
             Base Price
@@ -63,32 +61,7 @@ export function PricingDurations() {
           </p>
         </div>
 
-        <div className="space-y-1.5">
-          <label htmlFor="max-hours-per-day" className="text-sm font-medium">
-            Maximum Gym Hours / Day
-          </label>
-          <div data-slot="input-group" className="flex h-11 items-center gap-3 rounded-xl border border-input bg-card px-3.5 focus-within:border-primary focus-within:ring-3 focus-within:ring-primary/20">
-            <input
-              id="max-hours-per-day"
-              type="number"
-              inputMode="decimal"
-              min={0}
-              max={24}
-              step="any"
-              value={maxHoursPerDay}
-              onChange={(e) => setMaxHoursPerDay(e.target.value)}
-              placeholder="e.g. 2"
-              aria-describedby="max-hours-hint"
-              className="min-w-0 w-full bg-transparent text-sm outline-none"
-            />
-            <span className="shrink-0 rounded-md bg-muted/60 px-2 py-1 text-xs font-medium text-muted-foreground">
-              hrs/day
-            </span>
-          </div>
-          <p id="max-hours-hint" className="text-xs text-muted-foreground">
-            Set a daily limit up to 24 hours. Leave blank for no limit.
-          </p>
-        </div>
+
       </div>
 
       <div className="space-y-3">

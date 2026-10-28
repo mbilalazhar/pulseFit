@@ -64,11 +64,8 @@ export async function DELETE(
 
     // Guard: refuse to delete a plan assigned to members or subscriptions —
     // deactivating is the safe path until no members remain.
-    const [subscribers, members] = await Promise.all([
-      prisma.memberSubscription.count({ where: { planId: id, gymId: session.gymId } }),
-      prisma.member.count({ where: { planId: id, gymId: session.gymId } }),
-    ]);
-    if (subscribers > 0 || members > 0) {
+    const subscribers = await prisma.memberSubscription.count({ where: { planId: id, gymId: session.gymId } });
+    if (subscribers > 0) {
       return NextResponse.json(
         {
           message:

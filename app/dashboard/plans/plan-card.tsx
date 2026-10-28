@@ -91,9 +91,13 @@ export function PlanCard({ plan }: { plan: PlanSummary }) {
     onError: (err: Error) => toast.error(err.message),
   })
 
-  const visibleFeatures = showAllFeatures
-    ? plan.features
-    : plan.features.slice(0, VISIBLE_LIMIT)
+  const features = [
+    { id: "daily-access", label: plan.maxHoursPerDay == null
+      ? "Unlimited gym access during opening hours"
+      : `Up to ${plan.maxHoursPerDay} ${plan.maxHoursPerDay === 1 ? "hour" : "hours"} of gym access per day` },
+    ...plan.features,
+  ]
+  const visibleFeatures = showAllFeatures ? features : features.slice(0, VISIBLE_LIMIT)
   const visibleDurations = showAllDurations
     ? plan.durations
     : plan.durations.slice(0, VISIBLE_LIMIT)
@@ -120,18 +124,14 @@ export function PlanCard({ plan }: { plan: PlanSummary }) {
           {money(plan.currency, plan.basePriceMinor)}
         </p>
         <p className="text-xs text-muted-foreground">per month</p>
-        {plan.maxHoursPerDay != null ? (
-          <p className="mt-2 text-xs text-muted-foreground">
-            Up to {plan.maxHoursPerDay} {plan.maxHoursPerDay === 1 ? "hour" : "hours"} of gym access per day
-          </p>
-        ) : null}
+
       </div>
 
       {/* Body: features + durations */}
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
         <div>
           <p className="text-xs font-medium text-muted-foreground">Includes:</p>
-          {plan.features.length === 0 ? (
+          {features.length === 0 ? (
             <p className="mt-2 text-xs text-muted-foreground">No features listed.</p>
           ) : (
             <>
@@ -145,7 +145,7 @@ export function PlanCard({ plan }: { plan: PlanSummary }) {
                   </li>
                 ))}
               </ul>
-              {plan.features.length > VISIBLE_LIMIT ? (
+              {features.length > VISIBLE_LIMIT ? (
                 <button
                   type="button"
                   onClick={() => setShowAllFeatures((v) => !v)}

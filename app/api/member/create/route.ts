@@ -36,6 +36,7 @@ export async function POST(req: Request) {
           status: "ACTIVE",
         },
         select: {
+          name: true,
           basePriceMinor: true,
           currency: true,
           durations: { where: { durationMonths: data.durationMonths }, select: { discountPercent: true } },
@@ -74,34 +75,54 @@ export async function POST(req: Request) {
           name: data.name,
           phone: data.phone,
           email: data.email,
-          planId: data.planId,
-          startDate,
-          durationMonths: data.durationMonths,
-          trainerId: data.trainerId ?? null,
           status,
-          subscriptions: {
-            create: {
-              gymId: session.gymId,
-              planId: data.planId,
-              priceMinor: amounts.finalAmount,
-              discountMinor: data.specialDiscountMinor,
-              currency: plan.currency,
-              startDate,
-              endDate: new Date(`${expiry}T00:00:00.000Z`),
-              status,
-            },
-          },
-          payments: data.amountReceivedMinor > 0 ? {
-            create: {
-              gymId: session.gymId,
-              amountMinor: data.amountReceivedMinor,
-              method: data.paymentMethod,
-              paidAt: new Date(`${data.paymentDate}T00:00:00.000Z`),
-            },
-          } : undefined,
         },
       })
-      return { member } as const
+      const subscription = await tx.memberSubscription.create({
+        data: {
+          gymId: session.gymId,
+          memberId: member.id,
+          planId: data.planId,
+          planNameSnapshot: plan.name,
+          durationMonths: data.durationMonths,
+          priceMinor: amounts.planAmount,
+          discountMinor: data.specialDiscountMinor,
+          finalMinor: amounts.finalAmount,
+          currency: plan.currency,
+          paymentStatus: amounts.balance === 0 ? "PAID" : data.amountReceivedMinor > 0 ? "PARTIAL" : "UNPAID",
+          startDate,
+          endDate: new Date(`${expiry}T00:00:00.000Z`),
+          status,
+        },
+      })
+      if (data.trainerId) {
+        await tx.memberTrainerAssignment.create({
+          data: { gymId: session.gymId, memberId: member.id, trainerId: data.trainerId, startedAt: startDate },
+        })
+      }
+      if (data.amountReceivedMinor > 0) {
+        const methods = { cash: "CASH", card: "CARD", bank_transfer: "BANK_TRANSFER", upi: "ONLINE", mobile_wallet: "ONLINE", other: "OTHER" } as const
+        await tx.payment.create({
+          data: {
+            gymId: session.gymId,
+            memberId: member.id,
+            memberSubscriptionId: subscription.id,
+            amountMinor: data.amountReceivedMinor,
+            currency: plan.currency,
+            method: methods[data.paymentMethod],
+            recordedByUserId: session.userId,
+            paidAt: new Date(`${data.paymentDate}T00:00:00.000Z`),
+          },
+        })
+      }
+      // Keep the existing response shape while storing membership data once.
+      return { member: {
+        ...member,
+        planId: data.planId,
+        startDate,
+        durationMonths: data.durationMonths,
+        trainerId: data.trainerId ?? null,
+      } } as const
     })
 
     if ("message" in result) {

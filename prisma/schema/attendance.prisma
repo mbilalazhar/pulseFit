@@ -11,6 +11,6 @@ model Attendance {
   gym    Gym    @relation(fields: [gymId], references: [id])
   member Member @relation(fields: [memberId, gymId], references: [id, gymId])
 
-  @@index([memberId, attendanceDate])
+  @@unique([memberId, attendanceDate])
   @@index([gymId, attendanceDate])
 }
