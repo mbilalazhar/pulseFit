@@ -1,4 +1,4 @@
-const CRIMSON = "#DC143C";
+const CRIMSON = "var(--color-decoration-crimson)";
 
 /**
  * Dashed crimson filaments with glowing terminals at each end.

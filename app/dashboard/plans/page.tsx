@@ -1,7 +1,5 @@
-import Link from "next/link"
+import { DashboardHeaderButton } from "@/components/dashboard-header-button"
 import { Plus } from "lucide-react"
-import { buttonVariants } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
 import { PlanNotice } from "./plan-notice"
 import { PlanList } from "./plan-list"
 
@@ -17,13 +15,7 @@ export default function Plans() {
           </p>
         </div>
 
-        <Link
-          href="/dashboard/plans/create"
-          className={cn(buttonVariants({ size: "lg" }), "gap-2 self-start sm:self-auto")}
-        >
-          <Plus className="size-4" />
-          Create Plan
-        </Link>
+        <DashboardHeaderButton icon={Plus} text="Create Plan" bgColor="primary" href="/dashboard/plans/create" />
       </header>
       <PlanNotice />
 

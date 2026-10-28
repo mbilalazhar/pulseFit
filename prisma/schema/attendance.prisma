@@ -5,10 +5,12 @@ model Attendance {
   attendanceDate DateTime @db.Date
   checkInAt      DateTime @default(now())
   checkOutAt     DateTime?
+  durationMinutes Int?                      // [NEW] set on check-out; drives heatmap intensity
+  note            String?                   // [NEW] "session notes"
 
   gym    Gym    @relation(fields: [gymId], references: [id])
-  member Member @relation(fields: [memberId], references: [id])
+  member Member @relation(fields: [memberId, gymId], references: [id, gymId])
 
-  @@unique([memberId, attendanceDate])
+  @@index([memberId, attendanceDate])
   @@index([gymId, attendanceDate])
 }

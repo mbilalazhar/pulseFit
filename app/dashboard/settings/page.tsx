@@ -1,5 +1,5 @@
-export default function Settings(){
-    return (
-        <h1>Settings</h1>
-    );
+import { SettingsContent } from "./settings-content"
+
+export default function Settings() {
+  return <SettingsContent />
 }

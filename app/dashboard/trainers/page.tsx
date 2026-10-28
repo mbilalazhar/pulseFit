@@ -1,7 +1,5 @@
-import Link from "next/link"
+import { DashboardHeaderButton } from "@/components/dashboard-header-button"
 import { Plus } from "lucide-react"
-import { buttonVariants } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
 import { TrainersTable } from "./trainers-table"
 import { StatsCards } from "./stats-cards"
 
@@ -17,13 +15,7 @@ export default function Trainers() {
           </p>
         </div>
 
-        <Link
-          href="/dashboard/trainers/create"
-          className={cn(buttonVariants({ size: "lg" }), "h-10 gap-2 self-start bg-primary px-5 text-primary-foreground hover:bg-primary/90 focus-visible:border-ring focus-visible:ring-ring/20 sm:self-auto")}
-        >
-          <Plus className="size-4" />
-          Add New Trainer
-        </Link>
+        <DashboardHeaderButton icon={Plus} text="Add New Trainer" bgColor="primary" href="/dashboard/trainers/create" />
       </header>
 
       {/* Stats */}

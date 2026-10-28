@@ -76,7 +76,7 @@ export function WorkSalaryDetails() {
             <FieldLabel htmlFor="trainer-salary" required>
               Monthly Salary (PKR)
             </FieldLabel>
-            <div className="flex h-11 items-center rounded-sm border border-input bg-card px-3.5 focus-within:border-primary focus-within:ring-3 focus-within:ring-primary/20">
+            <div data-slot="input-group" className="flex h-11 items-center rounded-sm border border-input bg-card px-3.5 focus-within:border-primary focus-within:ring-3 focus-within:ring-primary/20">
               <span className="mr-2 text-sm text-muted-foreground">PKR</span>
               <input
                 id="trainer-salary"
@@ -176,7 +176,7 @@ export function WorkSalaryDetails() {
               <FieldLabel htmlFor="contractor-price" required>
                 {pricingModel === "fixed" ? "Monthly Fee (PKR)" : "Price per Session (PKR)"}
               </FieldLabel>
-              <div className="flex h-11 items-center rounded-sm border border-input bg-card px-3.5 focus-within:border-primary focus-within:ring-3 focus-within:ring-primary/20">
+              <div data-slot="input-group" className="flex h-11 items-center rounded-sm border border-input bg-card px-3.5 focus-within:border-primary focus-within:ring-3 focus-within:ring-primary/20">
                 <span className="mr-2 text-sm text-muted-foreground">PKR</span>
                 <input
                   id="contractor-price"

@@ -1,5 +1,5 @@
-export default function Reports(){
-    return (
-        <h1>Reports</h1>
-    );
+import { ReportsContent } from "./reports-content"
+
+export default function Reports() {
+  return <ReportsContent />
 }

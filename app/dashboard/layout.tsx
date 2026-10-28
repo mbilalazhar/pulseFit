@@ -18,8 +18,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const title = gymName ? `${gymName.toUpperCase()}` : "Dashboard"
 
   return (
-    <div className="flex min-h-svh">
-      <Sidebar />
+    <div data-dashboard className="flex min-h-svh">
+      <Sidebar gymName={gymName} />
       <div className="flex min-w-0 flex-1 flex-col">
         <Navbar title={title} />
         <main className="scrollbar-hide flex-1 overflow-y-auto p-6">{children}</main>

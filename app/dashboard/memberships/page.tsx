@@ -1,5 +1,5 @@
-export default function Memberships(){
-    return (
-        <h1>Memberships</h1>
-    );
+import { MembershipsContent } from "./memberships-content"
+
+export default function Memberships() {
+  return <MembershipsContent />
 }

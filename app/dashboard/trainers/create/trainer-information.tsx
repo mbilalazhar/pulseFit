@@ -43,7 +43,7 @@ export function TrainerInformation() {
           <FieldLabel htmlFor="trainer-phone" required>
             Phone Number
           </FieldLabel>
-          <div className="flex h-11 items-center rounded-sm border border-input bg-card px-3.5 focus-within:border-primary focus-within:ring-3 focus-within:ring-primary/20">
+          <div data-slot="input-group" className="flex h-11 items-center rounded-sm border border-input bg-card px-3.5 focus-within:border-primary focus-within:ring-3 focus-within:ring-primary/20">
             <span className="mr-2 shrink-0 border-r pr-2.5 text-sm text-muted-foreground">
               PK +92
             </span>

@@ -24,7 +24,7 @@ enum PackageType {
 model Trainer {
   id    String @id @default(cuid())
   gymId String
-
+  userId String? @unique                                  // [NEW] link to login account
   fullName      String
   email         String
   contactNumber String
@@ -33,7 +33,7 @@ model Trainer {
   status      TrainerStatus @default(ACTIVE)
 
   // STAFF only
-  monthlySalary   Float?
+  monthlySalaryMinor  Int?
   workHoursPerDay Float?
   workDaysPerWeek Int?
   shift           TrainerShift?
@@ -41,8 +41,8 @@ model Trainer {
   // CONTRACTOR only — the gym charges the trainer either a flat monthly fee
   // or a per-session rate, over an agreed number of sessions per week.
   contractorPaymentType ContractorPaymentType?
-  fixedFeeAmount        Float?
-  sessionRate           Float?
+  fixedFeeAmount        Int?
+  sessionRate           Int?
   sessionsPerWeek       Int?
 
   // STAFF joining date / CONTRACTOR contract start date
@@ -54,20 +54,23 @@ model Trainer {
   certifications  String[]
 
   gym             Gym                     @relation(fields: [gymId], references: [id])
+  user            User?                   @relation(fields: [userId], references: [id])
   specializations TrainerSpecialization[]
   packages        TrainingPackage[]
-  members         Member[]
+  assignments     MemberTrainerAssignment[]
+  availability    TrainerAvailability[]
+  sessions        TrainingSession[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@unique([gymId, email])
+  @@unique([id, gymId])
   @@index([gymId, status])
 }
 model Specialization {
   id   String @id @default(cuid())
   name String @unique
-
   trainers TrainerSpecialization[]
 }
 model TrainerSpecialization {
@@ -84,11 +87,60 @@ model TrainingPackage {
   name     String
   type     PackageType
   duration Int // session duration in minutes
-  price    Float
+  priceMinor    Int0
 
   trainerId String
   trainer   Trainer @relation(fields: [trainerId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// [NEW] Assignment history. Replaces Member.trainerId (which lost history on trainer delete).
+model MemberTrainerAssignment {
+  id        String    @id @default(cuid())
+  gymId     String
+  memberId  String
+  trainerId String
+  startedAt DateTime  @default(now())
+  endedAt   DateTime?                                     // NULL = current trainer
+
+  gym     Gym     @relation(fields: [gymId], references: [id])
+  member  Member  @relation(fields: [memberId, gymId], references: [id, gymId])
+  trainer Trainer @relation(fields: [trainerId, gymId], references: [id, gymId])
+
+  @@index([gymId, trainerId, endedAt])                    // "members assigned to this trainer"
+  @@index([memberId, endedAt])
+}
+
+// [NEW] Weekly availability, in gym-local time (minutes from midnight).
+model TrainerAvailability {
+  id          String  @id @default(cuid())
+  trainerId   String
+  dayOfWeek   Int                                         // 0 = Sunday
+  startMinute Int
+  endMinute   Int
+  trainer     Trainer @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+  @@index([trainerId, dayOfWeek])
+}
+
+enum SessionStatus { SCHEDULED COMPLETED CANCELED NO_SHOW }
+
+// [NEW] Booked sessions: ties member + trainer + time. Overlap blocked in constraints.sql.
+model TrainingSession {
+  id        String        @id @default(cuid())
+  gymId     String
+  trainerId String
+  memberId  String
+  startsAt  DateTime
+  endsAt    DateTime
+  status    SessionStatus @default(SCHEDULED)
+  notes     String?
+
+  gym     Gym     @relation(fields: [gymId], references: [id])
+  trainer Trainer @relation(fields: [trainerId, gymId], references: [id, gymId])
+  member  Member  @relation(fields: [memberId, gymId], references: [id, gymId])
+
+  @@index([gymId, trainerId, startsAt])
+  @@index([memberId, startsAt])
 }

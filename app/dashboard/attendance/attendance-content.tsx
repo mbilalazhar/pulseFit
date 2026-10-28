@@ -66,7 +66,7 @@ export function AttendanceContent() {
         <AttendanceOverview data={data} />
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
           <section className="rounded-xl border border-border/80 bg-card p-4">
-            <h2 className="flex items-center gap-2 text-sm font-bold"><span className="size-2 rounded-full bg-emerald-500 shadow-[0_0_0_4px_#ecfdf5]" />{data.date === data.today ? "Live Check-ins" : "Recent Check-ins"}</h2>
+            <h2 className="flex items-center gap-2 text-sm font-bold"><span className="size-2 rounded-full bg-emerald-500 shadow-[0_0_0_4px_var(--color-live-check-in-halo)]" />{data.date === data.today ? "Live Check-ins" : "Recent Check-ins"}</h2>
             <div className="mt-3 divide-y divide-border">
               {data.live.map((row) => <div key={row.memberId} className="flex items-center gap-2 py-2">
                 <Image src={defaultAvatar} alt="" width={26} height={26} className="size-[26px] rounded-full object-cover" />

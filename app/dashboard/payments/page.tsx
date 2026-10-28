@@ -1,5 +1,5 @@
-export default function Payments(){
-    return (
-        <h1>Payments</h1>
-    );
+import { PaymentsContent } from "./payments-content"
+
+export default function Payments() {
+  return <PaymentsContent />
 }

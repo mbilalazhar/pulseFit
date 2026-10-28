@@ -107,7 +107,7 @@ export function PlanFeatures() {
                 className="group flex items-start gap-2.5 rounded-xl border bg-muted/20 p-3"
               >
                 <Check
-                  className="mt-0.5 size-4 shrink-0 text-success drop-shadow-[0_0_6px_rgba(22,163,74,0.85)]"
+                  className="mt-0.5 size-4 shrink-0 text-success drop-shadow-[0_0_6px_var(--color-success-glow)]"
                   strokeWidth={3}
                 />
                 <span className="flex-1 text-sm leading-snug">{f.text}</span>

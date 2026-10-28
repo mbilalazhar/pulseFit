@@ -7,6 +7,8 @@ model Gym {
   id               String    @id @default(cuid())
   organizationName String    @unique
   slug             String    @unique
+
+  // country and currency suggested here
   timeZone         String    @default("Asia/Karachi")
   status           GymStatus @default(ACTIVE)
   createdAt        DateTime  @default(now())
@@ -19,4 +21,6 @@ model Gym {
   memberSubscriptions MemberSubscription[]
   payments            Payment[]
   attendance          Attendance[]
+  assignments         MemberTrainerAssignment[]
+  trainingSessions    TrainingSession[]
 }

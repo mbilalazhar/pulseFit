@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useQuery } from "@tanstack/react-query"
 import { AlertCircle, CheckCircle2, Download, FileSpreadsheet, Loader2, Upload } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { DashboardHeaderButton } from "@/components/dashboard-header-button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { getPlans } from "@/lib/services/subscription.services"
 import { getTrainers } from "@/lib/services/trainer.services"
@@ -136,7 +137,7 @@ export function BulkMemberDialog() {
   const [open, setOpen] = useState(false)
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button type="button" variant="outline" size="lg" className="gap-2 bg-card" />}><Upload className="size-4" />Bulk Import Members</DialogTrigger>
+      <DialogTrigger render={<DashboardHeaderButton icon={Upload} text="Bulk Import Members" bgColor="transparent" />} />
       <DialogContent className="max-h-[calc(100svh-2rem)] gap-5 overflow-y-auto p-6 sm:max-w-3xl">
         <DialogHeader className="pr-6"><DialogTitle className="text-xl font-bold">Bulk upload members</DialogTitle><DialogDescription>Prepare your Excel file, check the details, and review your members together.</DialogDescription></DialogHeader>
         {open ? <BulkMemberPanel onClose={() => setOpen(false)} /> : null}

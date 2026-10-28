@@ -14,25 +14,60 @@ model Member {
   status    MemberStatus @default(INACTIVE)
   joinedAt  DateTime     @default(now())
   createdAt DateTime     @default(now())
+  deletedAt DateTime?
 
-  // Nullable for members created before membership details were collected.
-  // The creation API requires a plan, start date, and purchased duration.
-  planId         String?
-  startDate      DateTime? @db.Date
-  durationMonths Int? // Snapshot of the purchased duration, independent of later plan edits.
-  trainerId      String?
+  // [CHANGED] REMOVED planId, startDate, durationMonths, trainerId.
+  // They duplicated MemberSubscription / assignment data and could drift out of sync.
+  // Current plan  = the member's ACTIVE MemberSubscription.
+  // Current trainer = the member's open MemberTrainerAssignment (endedAt IS NULL).
 
-  gym           Gym                  @relation(fields: [gymId], references: [id])
-  user          User?                @relation(fields: [userId], references: [id])
-  plan          Plan?                @relation(fields: [planId], references: [id], onDelete: Restrict)
-  trainer       Trainer?             @relation(fields: [trainerId], references: [id], onDelete: SetNull)
-  subscriptions MemberSubscription[]
-  payments      Payment[]
-  attendance    Attendance[]
+
+  gym               Gym                  @relation(fields: [gymId], references: [id])
+  user              User?                @relation(fields: [userId], references: [id])
+  subscriptions     MemberSubscription[]
+  payments          Payment[]
+  attendance        Attendance[]
+  assignments       MemberTrainerAssignment[]
+  trainingSessions  TrainingSession[]
+  measurements      BodyMeasurement[]
+  goals             MemberGoal[]
+  notes             MemberNote[]
 
   @@unique([gymId, email])
+  @@unique([id, gymId])
   @@index([gymId, status, joinedAt])
   @@index([gymId, phone])
-  @@index([planId])
-  @@index([trainerId])
+}
+
+model BodyMeasurement {
+  id           String   @id @default(cuid())
+  gymId        String
+  memberId     String
+  measuredAt   DateTime
+  weightKg     Decimal? @db.Decimal(5, 2)
+  bodyFatPct   Decimal? @db.Decimal(4, 1)
+  muscleMassKg Decimal? @db.Decimal(5, 2)
+
+enum GoalType { FAT_LOSS LEAN_MUSCLE ENDURANCE CONSISTENCY CUSTOM }
+
+model MemberGoal {
+  id          String    @id @default(cuid())
+  gymId       String
+  memberId    String
+  type        GoalType
+  description String?
+  achievedAt  DateTime?
+  member      Member    @relation(fields: [memberId, gymId], references: [id, gymId])
+  @@index([memberId])
+}
+
+model MemberNote {
+  id           String   @id @default(cuid())
+  gymId        String
+  memberId     String
+  authorUserId String
+  body         String
+  createdAt    DateTime @default(now())
+  member       Member   @relation(fields: [memberId, gymId], references: [id, gymId])
+  @@index([memberId, createdAt])
 }

@@ -35,7 +35,7 @@ export function PricingDurations() {
           <label htmlFor="base-price" className="text-sm font-medium">
             Base Price
           </label>
-          <div className="flex h-11 items-center gap-3 rounded-xl border border-input bg-card pl-1.5 pr-3.5 focus-within:border-primary focus-within:ring-3 focus-within:ring-primary/20">
+          <div data-slot="input-group" className="flex h-11 items-center gap-3 rounded-xl border border-input bg-card pl-1.5 pr-3.5 focus-within:border-primary focus-within:ring-3 focus-within:ring-primary/20">
             <select
               id="currency"
               aria-label="Currency"
@@ -67,7 +67,7 @@ export function PricingDurations() {
           <label htmlFor="max-hours-per-day" className="text-sm font-medium">
             Maximum Gym Hours / Day
           </label>
-          <div className="flex h-11 items-center gap-3 rounded-xl border border-input bg-card px-3.5 focus-within:border-primary focus-within:ring-3 focus-within:ring-primary/20">
+          <div data-slot="input-group" className="flex h-11 items-center gap-3 rounded-xl border border-input bg-card px-3.5 focus-within:border-primary focus-within:ring-3 focus-within:ring-primary/20">
             <input
               id="max-hours-per-day"
               type="number"

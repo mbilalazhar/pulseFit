@@ -1,7 +1,5 @@
+import { DashboardContent } from "./overview/dashboard-content"
+
 export default function Dashboard() {
-  return (
-    <div>
-        Main Page
-    </div>
-  )
+  return <DashboardContent />
 }

@@ -34,13 +34,13 @@ export function AttendanceOverview({ data }: { data: AttendanceData }) {
             {period !== "Today" ? <text x="578" y={202 - tick * 39} fontSize="10" fill="var(--muted-foreground)">{tick * 25}%</text> : null}
           </g>)}
           {points.map((point, index) => <g key={index}>
-            <title>{point.label}: {point.checkIns} check-ins{period !== "Today" ? `, ${point.checkOuts} check-outs, ${point.rate}% attendance` : ""}</title>
-            <rect x={48 + step * (index + .5) - width - 1} y={198 - point.checkIns / maximum * 156} width={width} height={point.checkIns / maximum * 156} rx="2" fill="#fecdd3" />
-            {period !== "Today" ? <rect x={48 + step * (index + .5) + 1} y={198 - point.checkOuts / maximum * 156} width={width} height={point.checkOuts / maximum * 156} rx="2" fill="#bfdbfe" /> : null}
+            <title>{`${point.label}: ${point.checkIns} check-ins${period !== "Today" ? `, ${point.checkOuts} check-outs, ${point.rate}% attendance` : ""}`}</title>
+            <rect x={48 + step * (index + .5) - width - 1} y={198 - point.checkIns / maximum * 156} width={width} height={point.checkIns / maximum * 156} rx="2" fill="var(--color-chart-check-ins)" />
+            {period !== "Today" ? <rect x={48 + step * (index + .5) + 1} y={198 - point.checkOuts / maximum * 156} width={width} height={point.checkOuts / maximum * 156} rx="2" fill="var(--color-chart-check-outs)" /> : null}
             {(period === "Weekly" || index % (period === "Today" ? 4 : 5) === 0) ? <text x={48 + step * (index + .5)} y="220" textAnchor="middle" fontSize="10" fill="var(--muted-foreground)">{point.label}</text> : null}
           </g>)}
-          {period !== "Today" && hasData ? <polyline points={rateLine} fill="none" stroke="#e11d48" strokeWidth="2" strokeLinejoin="round" /> : null}
-          {period === "Weekly" && hasData ? points.map((point, index) => <circle key={index} cx={48 + step * (index + .5)} cy={198 - point.rate * 1.55} r="3" fill="#e11d48" />) : null}
+          {period !== "Today" && hasData ? <polyline points={rateLine} fill="none" stroke="var(--color-chart-attendance-rate)" strokeWidth="2" strokeLinejoin="round" /> : null}
+          {period === "Weekly" && hasData ? points.map((point, index) => <circle key={index} cx={48 + step * (index + .5)} cy={198 - point.rate * 1.55} r="3" fill="var(--color-chart-attendance-rate)" />) : null}
         </svg>
         {!hasData ? <div className="pointer-events-none absolute inset-0 flex items-center justify-center"><span className="rounded-lg bg-card/95 px-4 py-2 text-xs text-muted-foreground">No check-ins in this period</span></div> : null}
       </div>

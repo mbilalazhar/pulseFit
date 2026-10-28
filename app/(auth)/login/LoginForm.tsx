@@ -106,7 +106,7 @@ export function LoginForm() {
                 setEmail(event.target.value)
                 revalidate(event.target.value, password)
               }}
-              className="h-[34px] rounded-[9px] border-[#e2e2e9] bg-white pl-10 pr-3.5 text-xs md:text-xs placeholder:text-[#92939d] focus-visible:border-[#d41250] focus-visible:ring-[#d41250]/15 xl:h-11 xl:text-sm"
+              className="h-[34px] rounded-[9px] border-login-input-border bg-white pl-10 pr-3.5 text-xs md:text-xs placeholder:text-login-placeholder focus-visible:border-login-primary focus-visible:ring-login-primary/15 xl:h-11 xl:text-sm"
             />
           </div>
           {errors.email ? (
@@ -138,7 +138,7 @@ export function LoginForm() {
                 setPassword(event.target.value)
                 revalidate(email, event.target.value)
               }}
-              className="h-[34px] rounded-[9px] border-[#e2e2e9] bg-white pl-10 pr-10 text-xs md:text-xs placeholder:text-[#92939d] focus-visible:border-[#d41250] focus-visible:ring-[#d41250]/15 xl:h-11 xl:text-sm"
+              className="h-[34px] rounded-[9px] border-login-input-border bg-white pl-10 pr-10 text-xs md:text-xs placeholder:text-login-placeholder focus-visible:border-login-primary focus-visible:ring-login-primary/15 xl:h-11 xl:text-sm"
             />
             <button
               type="button"
@@ -164,18 +164,18 @@ export function LoginForm() {
       <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
         <Label
           htmlFor="remember"
-          className="cursor-pointer gap-2 text-xs font-normal text-[#50515a]"
+          className="cursor-pointer gap-2 text-xs font-normal text-login-label"
         >
           <Checkbox
             id="remember"
             name="remember"
-            className="border-[#d4d4dc] data-checked:border-[#d41250] data-checked:bg-[#d41250]"
+            className="border-login-checkbox-border data-checked:border-login-primary data-checked:bg-login-primary"
           />
           Keep me signed in
         </Label>
         <Link
           href="/forgot-password"
-          className="text-xs font-medium text-[#df1550] underline-offset-4 hover:underline"
+          className="text-xs font-medium text-login-link underline-offset-4 hover:underline"
         >
           Forgot password?
         </Link>
@@ -185,7 +185,7 @@ export function LoginForm() {
         type="submit"
         size="lg"
         disabled={mutation.isPending}
-        className="mt-5 h-9 w-full gap-2 rounded-[10px] bg-[#d41250] text-sm font-semibold text-white shadow-[0_6px_18px_-8px_rgba(212,18,80,0.4)] hover:bg-[#ba1046] focus-visible:border-[#d41250] focus-visible:ring-[#d41250]/25 xl:h-12"
+        className="mt-5 h-9 w-full gap-2 rounded-[10px] bg-login-primary text-sm font-semibold text-white shadow-[0_6px_18px_-8px_var(--color-login-button-shadow)] hover:bg-login-primary-hover focus-visible:border-login-primary focus-visible:ring-login-primary/25 xl:h-12"
       >
         {mutation.isPending ? (
           <>

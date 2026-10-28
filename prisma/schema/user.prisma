@@ -1,5 +1,6 @@
 enum Role {
   ADMIN
+  MANAGER
   TRAINER
   MEMBER
 }
@@ -11,8 +12,9 @@ model User {
   password String
   role     Role
 
-  gym    Gym     @relation(fields: [gymId], references: [id])
-  member Member?
+  gym      Gym     @relation(fields: [gymId], references: [id])
+  member   Member?
+  trainer  trainer?
 
   @@index([gymId, role])
 }

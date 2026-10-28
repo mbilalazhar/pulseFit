@@ -1,0 +1,294 @@
+/* Site color source of truth.
+ * Use named utilities (bg-login-primary, text-accent, etc.) in className,
+ * and var(--color-...) or semantic var(--accent) tokens in styles and SVGs.
+ * Keep new color literals here. Static theme tokens also support SVG-only uses.
+ */
+@theme {
+  /* Brand and feedback utilities; primary/accent are mapped below. */
+  --color-primary-hover: #1A1A1A;
+  --color-accent-hover: #b0224a;
+
+  /* Set your light grays for text */
+  --color-main: #EEEEEE;
+  --color-outline: #DDDDDD;
+
+  /* Auth canvas — matches the login artwork's background so the page and
+     image read as one continuous surface. */
+  --color-canvas: #F3F3F5;
+
+  /* Feedback colors (password strength, form states) */
+  --color-warning: #CA8A04;
+  --color-success: #16A34A;
+}
+
+/* Existing utility palette, with the original Tailwind shades. */
+@theme static {
+  --color-red-50: oklch(97.1% 0.013 17.38);
+  --color-red-200: oklch(88.5% 0.062 18.334);
+  --color-red-400: oklch(70.4% 0.191 22.216);
+  --color-red-700: oklch(50.5% 0.213 27.518);
+  --color-red-900: oklch(39.6% 0.141 25.723);
+  --color-red-950: oklch(25.8% 0.092 26.042);
+  --color-orange-50: oklch(98% 0.016 73.684);
+  --color-orange-100: oklch(95.4% 0.038 75.164);
+  --color-orange-300: oklch(83.7% 0.128 66.29);
+  --color-orange-400: oklch(75% 0.183 55.934);
+  --color-orange-500: oklch(70.5% 0.213 47.604);
+  --color-orange-600: oklch(64.6% 0.222 41.116);
+  --color-orange-700: oklch(55.3% 0.195 38.402);
+  --color-orange-800: oklch(47% 0.157 37.304);
+  --color-orange-950: oklch(26.6% 0.079 36.259);
+  --color-amber-50: oklch(98.7% 0.022 95.277);
+  --color-amber-300: oklch(87.9% 0.169 91.605);
+  --color-amber-400: oklch(82.8% 0.189 84.429);
+  --color-amber-500: oklch(76.9% 0.188 70.08);
+  --color-amber-600: oklch(66.6% 0.179 58.318);
+  --color-amber-700: oklch(55.5% 0.163 48.998);
+  --color-amber-800: oklch(47.3% 0.137 46.201);
+  --color-amber-900: oklch(41.4% 0.112 45.904);
+  --color-amber-950: oklch(27.9% 0.077 45.635);
+  --color-green-100: oklch(96.2% 0.044 156.743);
+  --color-green-400: oklch(79.2% 0.209 151.711);
+  --color-green-600: oklch(62.7% 0.194 149.214);
+  --color-green-700: oklch(52.7% 0.154 150.069);
+  --color-green-950: oklch(26.6% 0.065 152.934);
+  --color-emerald-50: oklch(97.9% 0.021 166.113);
+  --color-emerald-100: oklch(95% 0.052 163.051);
+  --color-emerald-200: oklch(90.5% 0.093 164.15);
+  --color-emerald-300: oklch(84.5% 0.143 164.978);
+  --color-emerald-400: oklch(76.5% 0.177 163.223);
+  --color-emerald-500: oklch(69.6% 0.17 162.48);
+  --color-emerald-600: oklch(59.6% 0.145 163.225);
+  --color-emerald-700: oklch(50.8% 0.118 165.612);
+  --color-emerald-800: oklch(43.2% 0.095 166.913);
+  --color-emerald-900: oklch(37.8% 0.077 168.94);
+  --color-emerald-950: oklch(26.2% 0.051 172.552);
+  --color-sky-50: oklch(97.7% 0.013 236.62);
+  --color-sky-100: oklch(95.1% 0.026 236.824);
+  --color-sky-400: oklch(74.6% 0.16 232.661);
+  --color-sky-500: oklch(68.5% 0.169 237.323);
+  --color-sky-600: oklch(58.8% 0.158 241.966);
+  --color-sky-700: oklch(50% 0.134 242.749);
+  --color-sky-950: oklch(29.3% 0.066 243.157);
+  --color-blue-50: oklch(97% 0.014 254.604);
+  --color-blue-100: oklch(93.2% 0.032 255.585);
+  --color-blue-200: oklch(88.2% 0.059 254.128);
+  --color-blue-400: oklch(70.7% 0.165 254.624);
+  --color-blue-500: oklch(62.3% 0.214 259.815);
+  --color-blue-600: oklch(54.6% 0.245 262.881);
+  --color-blue-700: oklch(48.8% 0.243 264.376);
+  --color-blue-950: oklch(28.2% 0.091 267.935);
+  --color-indigo-50: oklch(96.2% 0.018 272.314);
+  --color-indigo-400: oklch(67.3% 0.182 276.935);
+  --color-indigo-600: oklch(51.1% 0.262 276.966);
+  --color-indigo-950: oklch(25.7% 0.09 281.288);
+  --color-violet-50: oklch(96.9% 0.016 293.756);
+  --color-violet-100: oklch(94.3% 0.029 294.588);
+  --color-violet-300: oklch(81.1% 0.111 293.571);
+  --color-violet-400: oklch(70.2% 0.183 293.541);
+  --color-violet-600: oklch(54.1% 0.281 293.009);
+  --color-violet-700: oklch(49.1% 0.27 292.581);
+  --color-violet-800: oklch(43.2% 0.232 292.759);
+  --color-violet-950: oklch(28.3% 0.141 291.089);
+  --color-rose-50: oklch(96.9% 0.015 12.422);
+  --color-rose-100: oklch(94.1% 0.03 12.58);
+  --color-rose-200: oklch(89.2% 0.058 10.001);
+  --color-rose-300: oklch(81% 0.117 11.638);
+  --color-rose-400: oklch(71.2% 0.194 13.428);
+  --color-rose-500: oklch(64.5% 0.246 16.439);
+  --color-rose-600: oklch(58.6% 0.253 17.585);
+  --color-rose-700: oklch(51.4% 0.222 16.935);
+  --color-rose-800: oklch(45.5% 0.188 13.697);
+  --color-rose-900: oklch(41% 0.159 10.272);
+  --color-rose-950: oklch(27.1% 0.105 12.094);
+  --color-slate-200: oklch(92.9% 0.013 255.508);
+  --color-slate-300: oklch(86.9% 0.022 252.894);
+  --color-slate-700: oklch(37.2% 0.044 257.287);
+  --color-slate-800: oklch(27.9% 0.041 260.031);
+  --color-neutral-100: oklch(97% 0 0);
+  --color-neutral-700: oklch(37.1% 0 0);
+  --color-black: #000;
+  --color-white: #fff;
+}
+
+@theme static {
+  /* Dashboard form focus: black in light mode, overridden below for dark mode. */
+  --color-dashboard-input-focus: var(--color-black);
+  --color-dashboard-input-focus-ring: color-mix(in oklab, var(--color-dashboard-input-focus) 20%, transparent);
+
+  /* Login page */
+  --color-login-background: #f7f7f9;
+  --color-login-foreground: #161619;
+  --color-login-primary: #d41250;
+  --color-login-primary-hover: #ba1046;
+  --color-login-link: #df1550;
+  --color-login-stat: #e31653;
+  --color-login-input-border: #e2e2e9;
+  --color-login-placeholder: #92939d;
+  --color-login-label: #50515a;
+  --color-login-checkbox-border: #d4d4dc;
+  --color-login-muted: #777880;
+  --color-login-subtle: #7c7d86;
+  --color-login-divider: #d8d8df;
+  --color-login-button-border: #dedee5;
+  --color-login-button-hover: #faf7f9;
+  --color-login-soft-border: #eeeef2;
+  --color-login-separator: #e3e3e9;
+  --color-login-decoration-ring: #f9e6ed;
+  --color-login-decoration-disc: #f9e5ed;
+  --color-login-decoration-corner: #f4e4eb;
+
+  /* Brand artwork and social providers */
+  --color-decoration-crimson: #DC143C;
+  --color-google-blue: #4285F4;
+  --color-google-green: #34A853;
+  --color-google-yellow: #FBBC05;
+  --color-google-red: #EA4335;
+  --color-facebook-blue: #1877F2;
+
+  /* Dashboard charts */
+  --color-chart-progress: #10b981;
+  --color-chart-revenue: #2fc579;
+  --color-chart-expenses: #f79ab5;
+  --color-chart-payment-income-start: #229f5c;
+  --color-chart-payment-income-end: #39b779;
+  --color-chart-payment-expense-start: #ef4771;
+  --color-chart-payment-expense-end: #fa7292;
+  --color-chart-collection: #15945b;
+  --color-chart-plan-basic: var(--color-chart-collection);
+  --color-chart-check-ins: #fecdd3;
+  --color-chart-check-outs: #bfdbfe;
+  --color-chart-attendance-rate: #e11d48;
+  --color-chart-report-income-start: #1faa66;
+  --color-chart-report-income-end: #36bf7d;
+  --color-chart-report-expense-start: #ff4677;
+  --color-chart-report-expense-end: #ff7b9d;
+  --color-chart-plan-pro: #ff4f7d;
+  --color-chart-plan-premium: #ffb347;
+  --color-chart-plan-trial: #b8bdc7;
+
+  /* Trainer workload */
+  --color-workload-light: #2ED573;
+  --color-workload-moderate: #FFA502;
+  --color-workload-heavy: #FF4757;
+  --color-workload-overloaded: #E74C3C;
+
+  /* Shadows and glows */
+  --color-login-button-shadow: rgba(212,18,80,0.4);
+  --color-login-panel-shadow: rgba(40,28,45,0.15);
+  --color-member-row-shadow: rgba(0,0,0,0.07);
+  --color-success-glow: rgba(22,163,74,0.85);
+  --color-live-check-in-halo: #ecfdf5;
+}
+
+/* Theme-aware utility aliases. */
+@theme inline {
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --color-secondary-hover: color-mix(in oklch, var(--secondary), var(--foreground) 5%);
+}
+
+/* Light theme */
+:root {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: #000000;
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: #CB2957;
+  --accent-foreground: #FFFFFF;
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: #CB2957;
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+}
+
+/* Dark theme */
+.dark {
+  color-scheme: dark;
+  --color-dashboard-input-focus: var(--color-white);
+  --color-dashboard-input-focus-ring: color-mix(in oklab, var(--color-dashboard-input-focus) 20%, transparent);
+  --background: #000000;
+  --foreground: #FFFFFF;
+  --card: #0B0B0B;
+  --card-foreground: #FFFFFF;
+  --popover: #111111;
+  --popover-foreground: #FFFFFF;
+  --primary: #FFFFFF;
+  --primary-foreground: #000000;
+  --secondary: #1A1A1A;
+  --secondary-foreground: #FFFFFF;
+  --muted: #1A1A1A;
+  --muted-foreground: #A3A3A3;
+  --accent: #CB2957;
+  --accent-foreground: #FFFFFF;
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: #292929;
+  --input: #333333;
+  --ring: #CB2957;
+  --chart-1: #E5E5E5;
+  --chart-2: #A3A3A3;
+  --chart-3: #737373;
+  --chart-4: #525252;
+  --chart-5: #404040;
+  --sidebar: #000000;
+  --sidebar-foreground: #FFFFFF;
+  --sidebar-primary: #CB2957;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #1A1A1A;
+  --sidebar-accent-foreground: #FFFFFF;
+  --sidebar-border: #292929;
+  --sidebar-ring: #CB2957;
+  --color-main: #262626;
+  --color-outline: #333333;
+  --color-primary-hover: #E5E5E5;
+}

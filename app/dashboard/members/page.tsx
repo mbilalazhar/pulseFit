@@ -1,7 +1,5 @@
-import Link from "next/link"
+import { DashboardHeaderButton } from "@/components/dashboard-header-button"
 import { Plus } from "lucide-react"
-import { buttonVariants } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
 import { MembersContent } from "./members-content"
 import { BulkMemberDialog } from "./bulk-member-dialog"
 
@@ -17,9 +15,7 @@ export default function MembersPage() {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <BulkMemberDialog />
-          <Link href="/dashboard/members/create" className={cn(buttonVariants({ size: "lg" }), "h-10 gap-2 bg-primary px-5 text-primary-foreground hover:bg-primary/90 focus-visible:border-ring focus-visible:ring-ring/20")}>
-            <Plus aria-hidden="true" className="size-4" />Add Member
-          </Link>
+          <DashboardHeaderButton icon={Plus} text="Add Member" bgColor="primary" href="/dashboard/members/create" />
         </div>
       </header>
 

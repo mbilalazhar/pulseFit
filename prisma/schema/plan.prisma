@@ -21,9 +21,9 @@ model Plan {
   features            PlanFeature[]
   durations           PlanDuration[]
   memberSubscriptions MemberSubscription[]
-  members             Member[]
-
+  // [CHANGED] removed `members Member[]` — Member no longer stores a plan
   @@unique([gymId, name])
+  @@unique([id, gymId])                               // [NEW] target for composite FKs
   @@index([gymId, status])
 }
 

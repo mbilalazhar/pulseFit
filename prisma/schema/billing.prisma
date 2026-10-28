@@ -4,40 +4,63 @@ enum MemberSubStatus {
   EXPIRED
   CANCELLED
 }
+enum MemberPaymentStatus {
+  UNPAID
+  PARTIAL
+  PAID
+}
 
 model MemberSubscription {
   id         String          @id @default(cuid())
   gymId      String
   memberId   String
   planId     String
+  planNameSnapshot String                                    // [NEW] survives plan rename/delete
+  durationMonths Int                                         // [NEW] moved here from Member
   priceMinor Int
   discountMinor Int @default(0)
+  finalMinor     Int                                         // [NEW] priceMinor - discountMinor (CHECK in SQL)
   currency String @default("PKR")
   startDate  DateTime
   endDate    DateTime
   status     MemberSubStatus @default(ACTIVE)
+  paymentStatus  MemberPaymentStatus @default(UNPAID)        // [NEW]
+  paymentDueDate DateTime?           @db.Date                // [NEW] powers "outstanding / overdue"
   createdAt  DateTime        @default(now())
 
   gym    Gym    @relation(fields: [gymId], references: [id])
-  member Member @relation(fields: [memberId], references: [id])
-  plan   Plan   @relation(fields: [planId], references: [id])
+  member Member @relation(fields: [memberId, gymId], references: [id, gymId])
+  plan   Plan   @relation(fields: [planId, gymId], references: [id, gymId])
+  payments  payment[]
 
+  @@unique([id, gymId])
   @@index([gymId, status, endDate])
-  @@index([gymId, memberId])
+  @@index([gymId, paymentStatus, paymentDueDate])
+  @@index([memberId, status])
 }
+
+enum PaymentMethod { CASH CARD BANK_TRANSFER ONLINE OTHER }  // [NEW] was free-text String
+enum PaymentKind { PAYMENT REFUND }                          // [NEW]
 
 model Payment {
   id          String   @id @default(cuid())
   gymId       String
   memberId    String
+  memberSubscriptionId String                                 // [NEW] required link to what was paid for
+  kind        paymentKind   @default(PAYMENT)
   amountMinor Int
-  method      String
+  currency    String  @default("PKR")
+  method      PaymentMethod
+  reference            String?                                // [NEW] receipt/txn no.
+  recordedByUserId     String?                                // [NEW] who entered it
   paidAt      DateTime @default(now())
   createdAt   DateTime @default(now())
 
   gym    Gym    @relation(fields: [gymId], references: [id])
-  member Member @relation(fields: [memberId], references: [id])
+  member Member @relation(fields: [memberId, gymId], references: [id, gymId])
+  subscription MemberSubscription @relation(fields: [memberSubscriptionId, gymId], references: [id, gymId])
 
   @@index([gymId, paidAt])
   @@index([gymId, memberId, paidAt])
+  @index([memberSubscriptionId])
 }

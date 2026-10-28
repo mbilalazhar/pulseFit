@@ -8,10 +8,10 @@ export function WorkloadRing({ percent, label }: WorkloadRingProps) {
   const circumference = 2 * Math.PI * radius
   const strokeDashoffset = circumference - (percent / 100) * circumference
 
-  let color = "#2ED573"
-  if (label === "Moderate") color = "#FFA502"
-  if (label === "Heavy") color = "#FF4757"
-  if (label === "Overloaded") color = "#E74C3C"
+  let color = "var(--color-workload-light)"
+  if (label === "Moderate") color = "var(--color-workload-moderate)"
+  if (label === "Heavy") color = "var(--color-workload-heavy)"
+  if (label === "Overloaded") color = "var(--color-workload-overloaded)"
 
   return (
     <div className="flex flex-col items-center gap-1.5">

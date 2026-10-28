@@ -117,7 +117,7 @@ export function MembersTable({ members, plans }: { members: MemberSummary[]; pla
             {filtered.map((member) => (
               <tr
                 key={member.id}
-                className="group relative border-b border-border transition-colors duration-200 ease-out hover:z-10 hover:translate-y-0.75 hover:bg-muted hover:shadow-[0_5px_18px_rgba(0,0,0,0.07)]"
+                className="group relative border-b border-border transition-colors duration-200 ease-out hover:z-10 hover:translate-y-0.75 hover:bg-muted hover:shadow-[0_5px_18px_var(--color-member-row-shadow)]"
               >
                 {/* Member */}
                 <td className="px-4 py-4">

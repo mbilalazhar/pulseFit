@@ -14,7 +14,7 @@ export default function LoadingOverlay() {
         <path
           d="M20 50 H35 L43 35 L52 65 L60 45 H80"
           fill="none"
-          stroke="#CB2957"
+          stroke="var(--accent)"
           strokeWidth="3.5"
           strokeLinecap="round"
           strokeLinejoin="round"
