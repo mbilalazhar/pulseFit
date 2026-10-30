@@ -74,3 +74,17 @@ test("does not combine charges denominated in different currencies", () => {
   assert.equal(member.payment, "Not recorded")
   assert.equal(member.balanceMinor, null)
 })
+
+test("a newer scheduled renewal cannot replace the active subscription's price and expiry", () => {
+  const base = record()
+  const member = buildMemberDirectory([record({ subscriptions: [
+    { ...base.subscriptions[0], status: "INACTIVE", priceMinor: 120000,
+      startDate: new Date("2026-11-01"), endDate: new Date("2026-11-30") },
+    ...base.subscriptions,
+  ] })], "Asia/Karachi", now).members[0]
+  assert.equal(member.startDate, "2026-10-01")
+  assert.equal(member.endDate, "2026-10-31")
+  assert.equal(member.priceMinor, 90000)
+  assert.equal(member.expiringSoon, true)
+  assert.equal(member.balanceMinor, 170000)
+})

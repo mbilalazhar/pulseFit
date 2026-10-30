@@ -13,6 +13,8 @@ import { getPlans } from "@/lib/services/subscription.services"
 import { getTrainers } from "@/lib/services/trainer.services"
 import { createMember } from "@/lib/services/member.services"
 import { cn } from "@/lib/utils"
+import { hasTrainerGuidance } from "@/lib/plan-features"
+import { requiresAdditionalTrainingCharge } from "@/lib/training-charges"
 import { membershipAmounts, membershipExpiry } from "./member-form-calculations"
 
 const controlClassName = "h-11 w-full min-w-0 rounded-sm border border-input bg-card px-3.5 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-ring focus:ring-3 focus:ring-ring/20 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:bg-muted disabled:text-foreground/80 disabled:opacity-100 read-only:bg-muted"
@@ -68,14 +70,24 @@ export function AddMemberForm() {
   const [durationMonths, setDurationMonths] = useState(1)
   const [startDate, setStartDate] = useState(today)
   const [trainerRequired, setTrainerRequired] = useState(false)
+  const [sessionOverrides, setSessionOverrides] = useState<{ sessionsPerWeek?: string; sessionDurationMinutes?: string }>({})
+  const [additionalCharge, setAdditionalCharge] = useState("")
   const [specialDiscount, setSpecialDiscount] = useState("")
   const [received, setReceived] = useState("")
   const plans = plansQuery.data?.plans.filter((plan) => plan.status === "ACTIVE") ?? []
   const trainers = trainersQuery.data?.trainers.filter((trainer) => trainer.status === "ACTIVE") ?? []
   const selected = plans.find((plan) => plan.id === planId)
+  const guidanceIncluded = hasTrainerGuidance(selected?.features ?? [])
+  const needsTrainer = guidanceIncluded || trainerRequired
+  const sessionsPerWeek = sessionOverrides.sessionsPerWeek ?? (guidanceIncluded ? selected?.sessionsPerWeek?.toString() ?? "" : "")
+  const sessionDurationMinutes = sessionOverrides.sessionDurationMinutes ?? (guidanceIncluded ? selected?.sessionDurationMinutes?.toString() ?? "" : "")
+  const chargeRequired = !!selected && needsTrainer && requiresAdditionalTrainingCharge(guidanceIncluded, selected, {
+    sessionsPerWeek: sessionsPerWeek.trim() ? Number(sessionsPerWeek) : null,
+    sessionDurationMinutes: sessionDurationMinutes.trim() ? Number(sessionDurationMinutes) : null,
+  })
   const expiryDate = selected ? membershipExpiry(startDate, durationMonths) : ""
   const discountPercent = selected?.durations.find((duration) => duration.durationMonths === durationMonths)?.discountPercent ?? 0
-  const amounts = membershipAmounts(selected?.basePriceMinor ?? 0, durationMonths, discountPercent, specialDiscount, received)
+  const amounts = membershipAmounts(selected?.basePriceMinor ?? 0, durationMonths, discountPercent, specialDiscount, received, chargeRequired ? additionalCharge : "0")
   const money = (minor: number) => selected ? `${selected.currency} ${(minor / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—"
   const durationLabel = `${durationMonths} ${durationMonths === 1 ? "Month" : "Months"}`
   const paymentStatus = selected ? amounts.status : "Pending"
@@ -90,7 +102,7 @@ export function AddMemberForm() {
       void queryClient.invalidateQueries({ queryKey: ["payments"] })
     },
   })
-  const canSubmit = !!selected && !!expiryDate && !plansQuery.isError && !mutation.isPending && !mutation.isSuccess && (!trainerRequired || (!trainersQuery.isPending && !trainersQuery.isError && trainers.length > 0))
+  const canSubmit = !!selected && !!expiryDate && !plansQuery.isError && !mutation.isPending && !mutation.isSuccess && (!needsTrainer || (!trainersQuery.isPending && !trainersQuery.isError && trainers.length > 0))
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -103,7 +115,10 @@ export function AddMemberForm() {
       planId,
       durationMonths,
       startDate,
-      trainerId: trainerRequired ? String(fields.get("trainerId") ?? "") : null,
+      trainerId: needsTrainer ? String(fields.get("trainerId") ?? "") : null,
+      sessionsPerWeek: needsTrainer ? Number(sessionsPerWeek) : undefined,
+      sessionDurationMinutes: needsTrainer ? Number(sessionDurationMinutes) : undefined,
+      additionalChargeMinor: chargeRequired && additionalCharge.trim() ? Math.round(Number(additionalCharge) * 100) : undefined,
       specialDiscountMinor: Math.round(Number(specialDiscount || 0) * 100),
       amountReceivedMinor: Math.round(Number(received || 0) * 100),
       paymentDate: String(fields.get("paymentDate") ?? ""),
@@ -119,6 +134,8 @@ export function AddMemberForm() {
     setDurationMonths(1)
     setStartDate(today())
     setTrainerRequired(false)
+    setSessionOverrides({})
+    setAdditionalCharge("")
     setSpecialDiscount("")
     setReceived("")
     mutation.reset()
@@ -160,7 +177,7 @@ export function AddMemberForm() {
                 plansQuery.isError ? <span role="alert">Couldn&apos;t load plans. <button type="button" onClick={() => void plansQuery.refetch()} className="font-semibold text-foreground underline">Try again</button></span>
                   : !plansQuery.isPending && plans.length === 0 ? <span>No active plans available. <Link href="/dashboard/plans" className="font-semibold text-foreground underline">Manage plans</Link></span> : undefined
               }>
-                <select id="member-plan" name="planId" value={planId} onChange={(event) => { setPlanId(event.target.value); setSpecialDiscount(""); setReceived("") }} required disabled={plansQuery.isPending || plansQuery.isError || plans.length === 0} aria-describedby={plansQuery.isError || plans.length === 0 ? "member-plan-help" : undefined} className={controlClassName}>
+                <select id="member-plan" name="planId" value={planId} onChange={(event) => { setPlanId(event.target.value); setSessionOverrides({}); setTrainerRequired(false); setAdditionalCharge(""); setSpecialDiscount(""); setReceived("") }} required disabled={plansQuery.isPending || plansQuery.isError || plans.length === 0} aria-describedby={plansQuery.isError || plans.length === 0 ? "member-plan-help" : undefined} className={controlClassName}>
                   <option value="" disabled>{plansQuery.isPending ? "Loading plans…" : "Select a plan"}</option>
                   {plans.map((plan) => <option key={plan.id} value={plan.id}>{plan.name}</option>)}
                 </select>
@@ -169,28 +186,40 @@ export function AddMemberForm() {
                 <MemberInput id="member-start-date" name="startDate" type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} required max="9999-01-01" />
               </Field>
               <Field id="member-duration" label="Membership Duration" required>
-                <select id="member-duration" name="durationMonths" value={durationMonths} onChange={(event) => { setDurationMonths(Number(event.target.value)); setSpecialDiscount(""); setReceived("") }} required className={controlClassName}>
+                <select id="member-duration" name="durationMonths" value={durationMonths} onChange={(event) => { setDurationMonths(Number(event.target.value)); setAdditionalCharge(""); setSpecialDiscount(""); setReceived("") }} required className={controlClassName}>
                   {Array.from({ length: 12 }, (_, index) => index + 1).map((months) => <option key={months} value={months}>{months} {months === 1 ? "Month" : "Months"}</option>)}
                 </select>
               </Field>
-              <fieldset className="min-w-0 space-y-1.5">
+              {!guidanceIncluded && <fieldset className="min-w-0 space-y-1.5">
                 <legend className="text-sm font-medium">Trainer Required?</legend>
                 <div className="flex h-11 items-center gap-4">
                   {[true, false].map((value) => <label key={String(value)} className="flex cursor-pointer items-center gap-2.5">
-                    <input type="radio" name="trainerRequired" value={String(value)} checked={trainerRequired === value} onChange={() => setTrainerRequired(value)} className="size-4 cursor-pointer accent-black focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black" />
+                    <input type="radio" name="trainerRequired" value={String(value)} checked={trainerRequired === value} onChange={() => { setTrainerRequired(value); setSessionOverrides({}); setAdditionalCharge("") }} className="size-4 cursor-pointer accent-black focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black" />
                     <span className="text-sm font-medium">{value ? "Yes" : "No"}</span>
                   </label>)}
                 </div>
-              </fieldset>
-              <Field id="member-trainer" label="Trainer Selection" required={trainerRequired} help={trainerRequired ? (
+              </fieldset>}
+              <Field id="member-trainer" label="Assigned Trainer" required={needsTrainer} help={needsTrainer ? (
                 trainersQuery.isError ? <span role="alert">Couldn&apos;t load trainers. <button type="button" onClick={() => void trainersQuery.refetch()} className="font-semibold text-foreground underline">Try again</button></span>
-                  : !trainersQuery.isPending && trainers.length === 0 ? "No active trainers available. Select No or add an active trainer." : undefined
+                  : !trainersQuery.isPending && trainers.length === 0 ? (guidanceIncluded ? "This plan includes trainer guidance. Add an active trainer before enrolling a member." : "No active trainers available. Select No or add an active trainer.") : undefined
               ) : undefined}>
-                <select key={String(trainerRequired)} id="member-trainer" name="trainerId" defaultValue="" required={trainerRequired} disabled={!trainerRequired || trainersQuery.isPending || trainersQuery.isError || trainers.length === 0} aria-describedby={trainerRequired && (trainersQuery.isError || trainers.length === 0) ? "member-trainer-help" : undefined} className={controlClassName}>
-                  <option value="" disabled={trainerRequired}>{!trainerRequired ? "No trainer assigned" : trainersQuery.isPending ? "Loading trainers…" : "Select a trainer"}</option>
+                <select key={`${planId}-${needsTrainer}`} id="member-trainer" name="trainerId" defaultValue="" required={needsTrainer} disabled={!needsTrainer || trainersQuery.isPending || trainersQuery.isError || trainers.length === 0} aria-describedby={needsTrainer && (trainersQuery.isError || trainers.length === 0) ? "member-trainer-help" : undefined} className={controlClassName}>
+                  <option value="" disabled={needsTrainer}>{!needsTrainer ? "No trainer assigned" : trainersQuery.isPending ? "Loading trainers…" : "Select a trainer"}</option>
                   {trainers.map((trainer) => <option key={trainer.id} value={trainer.id}>{trainer.fullName}{trainer.specializations.length ? ` (${trainer.specializations.map((item) => item.name).join(", ")})` : ""}</option>)}
                 </select>
               </Field>
+              {needsTrainer && <>
+                <Field id="member-weekly-sessions" label="Sessions per Week" required help={guidanceIncluded ? "Starts with the plan allowance. You can change it for this member." : "Enter how many trainer sessions this member will receive each week."}>
+                  <MemberInput id="member-weekly-sessions" name="sessionsPerWeek" type="number" min={1} max={21} step={1} required
+                    value={sessionsPerWeek} onChange={(event) => { setSessionOverrides((previous) => ({ ...previous, sessionsPerWeek: event.target.value })); setAdditionalCharge("") }}
+                    aria-describedby="member-weekly-sessions-help" />
+                </Field>
+                <Field id="member-session-minutes" label="Session Length (minutes)" required help={guidanceIncluded ? "Starts with the plan limit. You can change it for this member." : "Enter the length of each trainer session in minutes."}>
+                  <MemberInput id="member-session-minutes" name="sessionDurationMinutes" type="number" min={1} max={1440} step={1} required
+                    value={sessionDurationMinutes} onChange={(event) => { setSessionOverrides((previous) => ({ ...previous, sessionDurationMinutes: event.target.value })); setAdditionalCharge("") }}
+                    aria-describedby="member-session-minutes-help" />
+                </Field>
+              </>}
             </div>
           </Section>
 
@@ -202,10 +231,18 @@ export function AddMemberForm() {
               <Field id="member-plan-amount" label="Plan Amount" help="Includes any discount configured for the selected duration.">
                 <MemberInput id="member-plan-amount" value={money(amounts.planAmount)} readOnly aria-describedby="member-plan-amount-help" />
               </Field>
+              {chargeRequired && (
+                <Field id="member-additional-charge" label="Additional Training Charges" required
+                  help={`Total extra charge for the selected ${durationMonths}-month membership, in ${selected?.currency}. Enter 0 if no extra charge applies.`}>
+                  <MemberInput id="member-additional-charge" name="additionalCharge" type="number" inputMode="decimal" min="0" max="21474836.47" step="0.01" required
+                    placeholder="Enter amount" value={additionalCharge} onChange={(event) => setAdditionalCharge(event.target.value)}
+                    aria-describedby="member-additional-charge-help" />
+                </Field>
+              )}
               <Field id="member-discount" label="Special Discount" optional>
                 <MemberInput id="member-discount" name="specialDiscount" type="number" inputMode="decimal" min="0" max={amounts.planAmount / 100} step="0.01" placeholder="0.00" value={specialDiscount} onChange={(event) => setSpecialDiscount(event.target.value)} disabled={!selected} />
               </Field>
-              <Field id="member-final-amount" label="Final Amount" help="Plan amount minus special discount.">
+              <Field id="member-final-amount" label="Final Amount" help="Plan amount plus additional training charges, minus special discount.">
                 <MemberInput id="member-final-amount" value={money(amounts.finalAmount)} readOnly aria-describedby="member-final-amount-help" />
               </Field>
             </div>
@@ -243,11 +280,16 @@ export function AddMemberForm() {
               <SummaryRow label="Start Date">{displayDate(startDate)}</SummaryRow>
               <SummaryRow label="Expiry Date">{displayDate(expiryDate)}</SummaryRow>
               <SummaryRow label="Duration">{durationLabel}</SummaryRow>
+              {needsTrainer && <>
+                <SummaryRow label="Weekly Sessions">{sessionsPerWeek || "—"}</SummaryRow>
+                <SummaryRow label="Session Length">{sessionDurationMinutes ? `${sessionDurationMinutes} minutes` : "—"}</SummaryRow>
+              </>}
             </dl>
             <div className="space-y-2.5 border-b px-5 py-4">
               <h3 className="font-heading text-sm font-semibold">Payment Summary</h3>
               <dl className="space-y-2.5">
                 <SummaryRow label="Plan Amount">{money(amounts.planAmount)}</SummaryRow>
+                {chargeRequired && <SummaryRow label="Additional Training Charges">{money(amounts.additionalChargeMinor)}</SummaryRow>}
                 <SummaryRow label="Special Discount">{selected && amounts.discount > 0 ? "− " : ""}{money(amounts.discount)}</SummaryRow>
                 <SummaryRow label="Final Amount" strong>{money(amounts.finalAmount)}</SummaryRow>
                 <SummaryRow label="Amount Received">{money(amounts.amountReceived)}</SummaryRow>

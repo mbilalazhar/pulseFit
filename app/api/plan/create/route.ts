@@ -9,7 +9,7 @@ export async function POST(req:Request) {
         if(!session || session.role !== "ADMIN"){ 
             return NextResponse.json({message: "Not Authenticated"}, {status: 401});
         }
-        const body = await req.json();
+        const body = await req.json().catch(() => null);
         const parsed = createPlanSchema.safeParse(body);
         if(!parsed.success){
             return NextResponse.json({message: "Invalid Data", error: parsed.error.flatten().fieldErrors}, {status: 400})
@@ -18,12 +18,14 @@ export async function POST(req:Request) {
         const plan = await prisma.plan.create({
             data: {
                 gymId:          session.gymId,
-                name:           data.name,
+                name:           data.name || `Untitled draft ${crypto.randomUUID()}`,
                 shortDesc:      data.shortDesc,
                 longDesc:       data.longDesc,
                 basePriceMinor: data.basePriceMinor,
                 currency:       data.currency,
                 maxHoursPerDay: data.maxHoursPerDay,
+                sessionsPerWeek: data.sessionsPerWeek,
+                sessionDurationMinutes: data.sessionDurationMinutes,
                 status:         data.status,
                 features:       {create: data.features},
                 durations:      {create: data.durations},

@@ -9,19 +9,19 @@ import {
 import { useRouter } from "next/navigation"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
-import { createPlan } from "@/lib/services/subscription.services"
+import { createPlan, updatePlan, type CreatePlanPayload, type PlanSummary } from "@/lib/services/subscription.services"
 import { createPlanSchema, PLAN_FEATURE_MAX } from "@/lib/validators/plan"
-import { buildPlanFeatures, type PlanFacility } from "@/lib/plan-features"
+import { buildPlanFeatures, hasTrainerGuidance, splitPlanFeatures, type PlanFacility } from "@/lib/plan-features"
 
 /* ---------- types ---------- */
 
 export type Status = "DRAFT" | "ACTIVE" | "INACTIVE"
-export type Duration = { id: string; months: number; discount: number }
+export type Duration = { id: string; months: number; discount: number; label?: string }
 
 /* ---------- constants ---------- */
 
-export const SHORT_MAX = 60
-export const LONG_MAX = 300
+export const SHORT_MAX = 200
+export const LONG_MAX = 2000
 export const FEATURE_MAX = PLAN_FEATURE_MAX
 
 export const STATUS_OPTIONS: {
@@ -33,19 +33,19 @@ export const STATUS_OPTIONS: {
   {
     value: "DRAFT",
     label: "Draft",
-    desc: "Only you can see this plan.",
+    desc: "Finish details later. Included trainer guidance needs session settings.",
     badge: "text-warning bg-warning/10",
   },
   {
     value: "INACTIVE",
     label: "Inactive",
-    desc: "Hidden from members — you can reactivate it anytime.",
+    desc: "Hidden from members. You can edit details and add or remove features.",
     badge: "text-muted-foreground bg-muted",
   },
   {
     value: "ACTIVE",
     label: "Active",
-    desc: "This plan will be visible to all members.",
+    desc: "Available to members. Deactivate the plan before making any changes.",
     badge: "text-success bg-success/10",
   },
 ]
@@ -94,6 +94,11 @@ type PlanFormValue = {
   setCurrency: (v: string) => void
   maxHoursPerDay: string
   setMaxHoursPerDay: (v: string) => void
+  guidanceIncluded: boolean
+  sessionsPerWeek: string
+  setSessionsPerWeek: (v: string) => void
+  sessionDurationMinutes: string
+  setSessionDurationMinutes: (v: string) => void
 
   durations: Duration[]
   durMonths: number
@@ -117,6 +122,10 @@ type PlanFormValue = {
 
   handleSubmit: (asDraft: boolean) => void
   isSubmitting: boolean
+  isEditing: boolean
+  pendingChanges: CreatePlanPayload | null
+  cancelSave: () => void
+  confirmSave: () => void
 }
 
 const PlanFormContext = createContext<PlanFormValue | null>(null)
@@ -128,31 +137,38 @@ export function usePlanForm() {
   return ctx
 }
 
-export function PlanFormProvider({ children }: { children: ReactNode }) {
+export function PlanFormProvider({ children, initialPlan }: { children: ReactNode; initialPlan?: PlanSummary }) {
   const router = useRouter()
   const queryClient = useQueryClient()
 
-  const [planName, setPlanName] = useState("")
-  const [shortDesc, setShortDesc] = useState("")
-  const [longDesc, setLongDesc] = useState("")
+  const [planName, setPlanName] = useState(initialPlan?.name ?? "")
+  const [shortDesc, setShortDesc] = useState(initialPlan?.shortDesc ?? "")
+  const [longDesc, setLongDesc] = useState(initialPlan?.longDesc ?? "")
 
-  const [basePrice, setBasePrice] = useState("")
-  const [currency, setCurrency] = useState("PKR")
-  const [maxHoursPerDay, setMaxHoursPerDay] = useState("")
+  const [basePrice, setBasePrice] = useState(initialPlan ? (initialPlan.basePriceMinor / 100).toFixed(2) : "")
+  const [currency, setCurrency] = useState(initialPlan?.currency ?? "PKR")
+  const [maxHoursPerDay, setMaxHoursPerDay] = useState(initialPlan?.maxHoursPerDay?.toString() ?? "")
+  const [sessionsPerWeek, setSessionsPerWeek] = useState(initialPlan?.sessionsPerWeek?.toString() ?? "")
+  const [sessionDurationMinutes, setSessionDurationMinutes] = useState(initialPlan?.sessionDurationMinutes?.toString() ?? "")
 
-  const [durations, setDurations] = useState<Duration[]>([])
+  const [durations, setDurations] = useState<Duration[]>(() => initialPlan?.durations.map((duration) => ({
+    id: duration.id, months: duration.durationMonths, discount: duration.discountPercent,
+    label: duration.label ?? undefined,
+  })) ?? [])
   const [durMonths, setDurMonths] = useState(1)
   const [durDiscount, setDurDiscount] = useState(0)
 
-  const [facilities, setFacilities] = useState<PlanFacility[]>([])
-  const [customFeatures, setCustomFeatures] = useState("")
+  const [facilities, setFacilities] = useState<PlanFacility[]>(() => splitPlanFeatures(initialPlan?.features ?? []).facilities)
+  const [customFeatures, setCustomFeatures] = useState(() => splitPlanFeatures(initialPlan?.features ?? []).customFeatures)
+  const guidanceIncluded = hasTrainerGuidance(buildPlanFeatures(facilities, customFeatures))
   const toggleFacility = (id: PlanFacility, included: boolean) => {
     setFacilities((previous) => included
       ? [...previous.filter((feature) => feature !== id), id]
       : previous.filter((feature) => feature !== id))
   }
 
-  const [status, setStatus] = useState<Status>("DRAFT")
+  const [status, setStatus] = useState<Status>(initialPlan?.status ?? "DRAFT")
+  const [pendingChanges, setPendingChanges] = useState<CreatePlanPayload | null>(null)
 
   const monthly = Number(basePrice) || 0
 
@@ -179,11 +195,13 @@ export function PlanFormProvider({ children }: { children: ReactNode }) {
     setDurations((prev) => prev.filter((d) => d.id !== id))
 
   const mutation = useMutation({
-    mutationFn: createPlan,
+    mutationFn: (payload: CreatePlanPayload) => initialPlan ? updatePlan(initialPlan.id, payload) : createPlan(payload),
     onSuccess: () => {
+      setPendingChanges(null)
       queryClient.invalidateQueries({ queryKey: ["plans"] })
-      toast.success("Plan created successfully.")
+      toast.success(initialPlan ? "Plan updated successfully." : "Plan created successfully.")
       router.push("/dashboard/plans")
+      router.refresh()
     },
     onError: (error: Error) => {
       toast.error(error.message)
@@ -192,22 +210,6 @@ export function PlanFormProvider({ children }: { children: ReactNode }) {
 
   const handleSubmit = (asDraft: boolean) => {
     if (mutation.isPending) return
-    if (!planName.trim()) {
-      toast.error("Enter a plan name.")
-      return
-    }
-    if (!shortDesc.trim()) {
-      toast.error("Enter a short description.")
-      return
-    }
-    if (monthly <= 0) {
-      toast.error("Enter a base price greater than zero.")
-      return
-    }
-    if (durations.length === 0) {
-      toast.error("Add at least one billing duration.")
-      return
-    }
     const parsed = createPlanSchema.safeParse({
       name: planName.trim(),
       shortDesc: shortDesc.trim(),
@@ -216,10 +218,12 @@ export function PlanFormProvider({ children }: { children: ReactNode }) {
       basePriceMinor: Math.round(monthly * 100),
       currency,
       maxHoursPerDay: maxHoursPerDay.trim() ? Number(maxHoursPerDay) : null,
+      sessionsPerWeek: guidanceIncluded && sessionsPerWeek.trim() ? Number(sessionsPerWeek) : null,
+      sessionDurationMinutes: guidanceIncluded && sessionDurationMinutes.trim() ? Number(sessionDurationMinutes) : null,
       status: asDraft ? "DRAFT" : status,
       features: buildPlanFeatures(facilities, customFeatures),
       durations: durations.map((d) => ({
-        label: `${d.months} ${d.months === 1 ? "Month" : "Months"}`,
+        label: d.label ?? `${d.months} ${d.months === 1 ? "Month" : "Months"}`,
         durationMonths: d.months,
         discountPercent: d.discount,
       })),
@@ -228,7 +232,8 @@ export function PlanFormProvider({ children }: { children: ReactNode }) {
       toast.error(parsed.error.issues[0].message)
       return
     }
-    mutation.mutate(parsed.data)
+    if (initialPlan || parsed.data.status === "ACTIVE") setPendingChanges(parsed.data)
+    else mutation.mutate(parsed.data)
   }
 
   const value: PlanFormValue = {
@@ -244,6 +249,11 @@ export function PlanFormProvider({ children }: { children: ReactNode }) {
     setCurrency,
     maxHoursPerDay,
     setMaxHoursPerDay,
+    guidanceIncluded,
+    sessionsPerWeek,
+    setSessionsPerWeek,
+    sessionDurationMinutes,
+    setSessionDurationMinutes,
     durations,
     durMonths,
     setDurMonths,
@@ -262,6 +272,12 @@ export function PlanFormProvider({ children }: { children: ReactNode }) {
     format,
     handleSubmit,
     isSubmitting: mutation.isPending,
+    isEditing: !!initialPlan,
+    pendingChanges,
+    cancelSave: () => { if (!mutation.isPending) setPendingChanges(null) },
+    confirmSave: () => {
+      if (pendingChanges && !mutation.isPending) mutation.mutate(pendingChanges)
+    },
   }
 
   return (

@@ -8,6 +8,8 @@ import { AboutPanels } from "./about-panels"
 import { MetricsStrip } from "./metrics-strip"
 import { WeeklySchedule } from "./weekly-schedule"
 import { PackagesTable } from "./packages-table"
+import { UnallocatedMembers } from "./unallocated-members"
+import { getUnallocatedTrainerMembers } from "@/lib/trainer-unallocated-members"
 import type { TrainerDetail } from "./trainer-detail-logic"
 
 export default async function TrainerDetailPage(
@@ -33,6 +35,8 @@ export default async function TrainerDetailPage(
   })
   if (!record) notFound()
 
+  const unallocatedMembers = await getUnallocatedTrainerMembers(session.gymId, record.id)
+
   const trainer: TrainerDetail = {
     ...record,
     monthlySalary: record.monthlySalaryMinor == null ? null : record.monthlySalaryMinor / 100,
@@ -57,6 +61,7 @@ export default async function TrainerDetailPage(
 
       <ProfileHeader trainer={trainer} />
       <AboutPanels trainer={trainer} />
+      <UnallocatedMembers members={unallocatedMembers} />
       <MetricsStrip trainer={trainer} />
 
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1.7fr)_minmax(280px,1fr)]">

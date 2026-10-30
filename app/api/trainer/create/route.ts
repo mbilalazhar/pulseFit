@@ -9,7 +9,7 @@ export async function POST(req: Request) {
         if(!session || session.role !== "ADMIN"){
             return NextResponse.json({message: "Not Authenticated"}, {status: 401});
         }
-        const body = await req.json();
+        const body = await req.json().catch(() => null);
         const parsed = createTrainerSchema.safeParse(body);
         if(!parsed.success){
             return NextResponse.json({message: "Invalid Data", error: parsed.error.flatten().fieldErrors}, {status: 400})
@@ -34,6 +34,7 @@ export async function POST(req: Request) {
                 },
             }
             : {
+                certifications:       [],
                 contractorPaymentType: data.paymentType,
                 fixedFeeAmount:        data.paymentType === "FIXED_FEE"     ? Math.round(data.amount * 100) : null,
                 sessionRate:           data.paymentType === "SESSION_BASED" ? Math.round(data.amount * 100) : null,
@@ -54,12 +55,20 @@ export async function POST(req: Request) {
         });
         return NextResponse.json({message: "Trainer Created", trainer}, {status: 201})
     } catch (error: unknown) {
-        if(error && typeof error === "object" && "code" in error && error.code === "P2002"){
-        return NextResponse.json(
-            {message: "A trainer with this email already exists!"},
-            {status: 409}
-        )
-    }
+        if(error && typeof error === "object" && "code" in error){
+            if (error.code === "P2002") {
+                return NextResponse.json(
+                    {message: "A trainer with this email or specialization already exists. Check the details and try again."},
+                    {status: 409}
+                )
+            }
+            if (error.code === "P2003") {
+                return NextResponse.json(
+                    {message: "The selected gym is no longer available"},
+                    {status: 409}
+                )
+            }
+        }
     console.error("Error in Creating Trainer", error);
     return NextResponse.json({message: "Error in creating trainer"},{status: 500})
     }

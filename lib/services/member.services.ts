@@ -24,6 +24,9 @@ export type CreateMemberResponse = {
     startDate: string
     durationMonths: number
     trainerId: string | null
+    sessionsPerWeek: number | null
+    sessionDurationMinutes: number | null
+    additionalChargeMinor: number
   }
 }
 

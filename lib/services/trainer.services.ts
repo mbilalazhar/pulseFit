@@ -45,7 +45,10 @@ async function parseResponse<T>(response: Response): Promise<T> {
   const data = await response.json().catch(() => null)
 
   if (!response.ok) {
-    throw new Error(data?.message ?? "Something went wrong. Please try again.")
+    const fields = data?.error && typeof data.error === "object"
+      ? Object.values(data.error).flat().filter((value): value is string => typeof value === "string")
+      : []
+    throw new Error(fields.length ? fields.join(" ") : data?.message ?? "Something went wrong. Please try again.")
   }
 
   return data as T

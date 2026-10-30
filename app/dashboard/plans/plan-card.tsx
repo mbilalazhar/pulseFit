@@ -67,12 +67,18 @@ export function PlanCard({ plan }: { plan: PlanSummary }) {
   const [showAllFeatures, setShowAllFeatures] = useState(false)
   const [showAllDurations, setShowAllDurations] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
+  const [activateOpen, setActivateOpen] = useState(false)
 
   const action = STATUS_ACTION[plan.status]
+  const canEdit = plan.status !== "ACTIVE"
+  const canDelete =
+    plan.status === "DRAFT" ||
+    (plan.status === "INACTIVE" && plan.memberCount === 0)
 
   const statusMutation = useMutation({
     mutationFn: () => updatePlanStatus(plan.id, action.next),
     onSuccess: () => {
+      setActivateOpen(false)
       toast.success(
         action.deactivate ? "Plan deactivated." : "Plan activated.",
       )
@@ -214,6 +220,12 @@ export function PlanCard({ plan }: { plan: PlanSummary }) {
         </div>
       </div>
 
+      {plan.sessionsPerWeek != null && plan.sessionDurationMinutes != null && (
+        <p className="mt-4 rounded-xl bg-muted/40 p-3 text-xs">
+          Trainer guidance: {plan.sessionsPerWeek} {plan.sessionsPerWeek === 1 ? "session" : "sessions"} per week · {plan.sessionDurationMinutes} minutes per session
+        </p>
+      )}
+
       {/* Members */}
       <div className="mt-4 flex items-center gap-2 border-t pt-3 text-xs text-muted-foreground">
         <Users className="size-3.5" />
@@ -228,7 +240,7 @@ export function PlanCard({ plan }: { plan: PlanSummary }) {
           type="button"
           variant="ghost"
           size="sm"
-          onClick={() => statusMutation.mutate()}
+          onClick={() => action.deactivate ? statusMutation.mutate() : setActivateOpen(true)}
           disabled={statusMutation.isPending}
           className="gap-1.5"
         >
@@ -241,27 +253,49 @@ export function PlanCard({ plan }: { plan: PlanSummary }) {
           )}
           {action.label}
         </Button>
-        <Link
-          href="/dashboard/plans/create"
-          className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "gap-1.5")}
-        >
-          <Pencil className="size-3.5" />
-          Edit
-        </Link>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => setDeleteOpen(true)}
-          className="gap-1.5 text-destructive hover:text-destructive"
-        >
-          <Trash2 className="size-3.5" />
-          Delete
-        </Button>
+        {canEdit && (
+          <Link
+            href={`/dashboard/plans/${plan.id}/edit`}
+            className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "gap-1.5")}
+          >
+            <Pencil className="size-3.5" />
+            Edit
+          </Link>
+        )}
+        {canDelete && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setDeleteOpen(true)}
+            className="gap-1.5 text-destructive hover:text-destructive"
+          >
+            <Trash2 className="size-3.5" />
+            Delete
+          </Button>
+        )}
       </div>
 
+      <Dialog open={activateOpen && canEdit} onOpenChange={(open) => { if (!statusMutation.isPending) setActivateOpen(open) }}>
+        <DialogContent showCloseButton={!statusMutation.isPending}>
+          <DialogHeader>
+            <DialogTitle>Activate “{plan.name}”?</DialogTitle>
+            <DialogDescription>
+              This plan will be available to members. No changes to its details, pricing or features will be accepted until you set the plan to Inactive.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose render={<Button variant="outline" disabled={statusMutation.isPending} />}>Cancel</DialogClose>
+            <Button onClick={() => statusMutation.mutate()} disabled={statusMutation.isPending || !canEdit}>
+              {statusMutation.isPending && <Loader2Icon className="size-4 animate-spin" />}
+              {statusMutation.isPending ? "Activating" : "Confirm & Activate"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Delete confirmation — discourages deletion in favor of deactivating */}
-      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+      <Dialog open={deleteOpen && canDelete} onOpenChange={setDeleteOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -288,7 +322,7 @@ export function PlanCard({ plan }: { plan: PlanSummary }) {
               type="button"
               variant="destructive"
               onClick={() => deleteMutation.mutate()}
-              disabled={deleteMutation.isPending}
+              disabled={!canDelete || deleteMutation.isPending}
               className="gap-1.5"
             >
               {deleteMutation.isPending ? (

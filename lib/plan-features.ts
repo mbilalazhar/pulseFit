@@ -1,6 +1,10 @@
 export const PLAN_FEATURE_MAX = 100
 export const TRAINER_FEATURE_LABEL = "Trainer guidance included"
 
+export function hasTrainerGuidance(features: readonly { label: string }[]) {
+  return features.some((feature) => feature.label.trim().toLowerCase() === TRAINER_FEATURE_LABEL.toLowerCase())
+}
+
 export const PLAN_FACILITIES = [
   { id: "trainer", label: TRAINER_FEATURE_LABEL },
   { id: "locker-room", label: "Locker room access" },
@@ -13,6 +17,18 @@ export const PLAN_FACILITIES = [
 ] as const
 
 export type PlanFacility = (typeof PLAN_FACILITIES)[number]["id"]
+
+/** Restore the facility checkboxes and custom benefits from saved labels. */
+export function splitPlanFeatures(features: readonly { label: string }[]) {
+  const facilities: PlanFacility[] = []
+  const custom: string[] = []
+  for (const feature of features) {
+    const facility = PLAN_FACILITIES.find((item) => item.label === feature.label)
+    if (facility) facilities.push(facility.id)
+    else custom.push(feature.label)
+  }
+  return { facilities, customFeatures: custom.join("\n") }
+}
 
 /** Preserve the existing label-based API and remove duplicates across both sections. */
 export function buildPlanFeatures(selected: readonly PlanFacility[], custom: string) {

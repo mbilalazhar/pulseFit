@@ -42,6 +42,7 @@ test("accepts every fixed duration from 1 through 12 months", () => {
 test("validates received amounts and requires a date for payments", () => {
   for (const invalid of [
     { amountReceivedMinor: -1 }, { specialDiscountMinor: -1 },
+    { additionalChargeMinor: -1 }, { additionalChargeMinor: 0.5 }, { additionalChargeMinor: 2147483648 },
     { amountReceivedMinor: 0.5 }, { specialDiscountMinor: 2147483648 },
     { amountReceivedMinor: 100 }, { paymentDate: "2026-02-30" },
     { paymentMethod: "invalid" },

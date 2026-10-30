@@ -19,6 +19,34 @@ async function post(body: unknown) {
 
 beforeEach(() => { role = "ADMIN"; create.mock.resetCalls() })
 
+test("persists guidance session defaults and rejects incomplete guidance", async () => {
+  const features = [{ label: "Trainer guidance included" }]
+  assert.equal((await post({ ...input, features })).status, 400)
+  assert.equal(create.mock.callCount(), 0)
+  assert.equal((await post({ ...input, features, sessionsPerWeek: 3, sessionDurationMinutes: 60 })).status, 201)
+  assert.equal(create.mock.calls[0].arguments[0].data.sessionsPerWeek, 3)
+  assert.equal(create.mock.calls[0].arguments[0].data.sessionDurationMinutes, 60)
+})
+
+test("saves multiple completely blank drafts with distinct temporary names", async () => {
+  assert.equal((await post({ status: "DRAFT" })).status, 201)
+  assert.equal((await post({})).status, 201)
+  const first = create.mock.calls[0].arguments[0].data
+  const second = create.mock.calls[1].arguments[0].data
+  assert.match(first.name as string, /^Untitled draft /)
+  assert.notEqual(first.name, second.name)
+  assert.equal(first.basePriceMinor, 0)
+  assert.equal(first.shortDesc, "")
+  assert.deepEqual(first.features, { create: [] })
+  assert.deepEqual(first.durations, { create: [] })
+})
+
+test("requires basic details for activation but does not require features", async () => {
+  assert.equal((await post({ status: "ACTIVE" })).status, 400)
+  assert.equal(create.mock.callCount(), 0)
+  assert.equal((await post({ ...input, status: "ACTIVE", features: [], maxHoursPerDay: null })).status, 201)
+})
+
 test("saves facilities, custom benefits and daily hours under the signed-in gym", async () => {
   assert.equal((await post({ ...input, gymId: "other-gym" })).status, 201)
   const data = create.mock.calls[0].arguments[0].data

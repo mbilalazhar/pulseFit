@@ -8,6 +8,7 @@ test("posts member, duration, trainer and payment details to the creation API", 
   const payload = {
     name: "Ali", phone: "+92 300 1234567", planId: "plan-1", durationMonths: 2,
     startDate: "2026-10-17", trainerId: "trainer-1", amountReceivedMinor: 10000,
+    sessionsPerWeek: 4, sessionDurationMinutes: 45, additionalChargeMinor: 15000,
     paymentDate: "2026-10-17", paymentMethod: "cash" as const,
   }
   const saved = { message: "Member Created", member: { id: "generated-id", name: "Ali" } }

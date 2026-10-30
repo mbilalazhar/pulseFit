@@ -180,7 +180,6 @@ export function TrainersTable() {
                         {hours.secondary}
                       </span>
                     </span>
-
                     {/* Packages */}
                     <span className="font-medium text-foreground">{trainer.packageCount}</span>
 

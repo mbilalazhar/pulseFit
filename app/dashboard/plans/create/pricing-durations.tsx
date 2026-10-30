@@ -43,6 +43,7 @@ export function PricingDurations() {
             >
               <option value="PKR">PKR</option>
               <option value="USD">USD</option>
+              {currency !== "PKR" && currency !== "USD" && <option value={currency}>{currency}</option>}
             </select>
             <input
               id="base-price"

@@ -13,6 +13,8 @@ model Plan {
   basePriceMinor Int
   currency       String     @default("PKR")
   maxHoursPerDay  Float?
+  sessionsPerWeek Int?
+  sessionDurationMinutes Int?
   status         PlanStatus @default(DRAFT)
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt

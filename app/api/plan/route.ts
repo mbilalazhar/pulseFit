@@ -38,6 +38,8 @@ export async function GET() {
       basePriceMinor: plan.basePriceMinor,
       currency: plan.currency,
       maxHoursPerDay: plan.maxHoursPerDay,
+      sessionsPerWeek: plan.sessionsPerWeek,
+      sessionDurationMinutes: plan.sessionDurationMinutes,
       status: plan.status,
       features: plan.features,
       durations: plan.durations,

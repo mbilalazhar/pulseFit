@@ -4,9 +4,9 @@ import { z } from "zod";
 export const MAX_SPECIALIZATIONS = 3;
 
 const baseTrainerSchema = {
-  fullName:      z.string().min(1, "Name is required").max(100),
-  email:         z.email("Enter a valid email address"),
-  contactNumber: z.string().min(1, "Contact number is required").max(20),
+  fullName:      z.string().trim().min(1, "Name is required").max(100),
+  email:         z.string().trim().pipe(z.email("Enter a valid email address").max(254)),
+  contactNumber: z.string().trim().min(1, "Contact number is required").max(20),
   // Contract start date for contractors, joining date for staff.
   joiningDate:   z.iso.date("Pick a valid date"),
 };
@@ -21,10 +21,12 @@ const staffTrainerSchema = z.object({
   shift:           z.enum(["MORNING", "EVENING", "NIGHT", "FLEXIBLE"]),
 
   specializations: z
-    .array(z.string().min(1).max(60))
+    .array(z.string().trim().min(1).max(60))
     .min(1, "Add at least one specialization")
-    .max(MAX_SPECIALIZATIONS, `Pick at most ${MAX_SPECIALIZATIONS} specializations`),
-  certifications: z.array(z.string().min(1).max(120)).default([]),
+    .max(MAX_SPECIALIZATIONS, `Pick at most ${MAX_SPECIALIZATIONS} specializations`)
+    .refine((values) => new Set(values.map((value) => value.toLowerCase())).size === values.length,
+      "Each specialization must be unique"),
+  certifications: z.array(z.string().trim().min(1).max(120)).default([]),
 });
 
 /* Contractors pay the gym — either a flat monthly fee or a per-session rate. */

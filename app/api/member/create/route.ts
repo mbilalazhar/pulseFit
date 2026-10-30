@@ -4,6 +4,9 @@ import { prisma } from "@/lib/prisma"
 import { createMemberSchema } from "@/lib/validators/member"
 import { memberStatusFromStartDate } from "@/lib/member-status"
 import { membershipAmounts, membershipExpiry } from "@/lib/membership"
+import { hasTrainerGuidance } from "@/lib/plan-features"
+import { trainerGuidanceSchema } from "@/lib/validators/trainer-guidance"
+import { requiresAdditionalTrainingCharge } from "@/lib/training-charges"
 
 export async function POST(req: Request) {
   try {
@@ -39,11 +42,40 @@ export async function POST(req: Request) {
           name: true,
           basePriceMinor: true,
           currency: true,
+          features: { select: { label: true } },
+          sessionsPerWeek: true,
+          sessionDurationMinutes: true,
           durations: { where: { durationMonths: data.durationMonths }, select: { discountPercent: true } },
         },
       })
       if (!plan) {
         return { message: "Select an active plan from your gym", status: 400 } as const
+      }
+
+      const guidanceIncluded = hasTrainerGuidance(plan.features)
+      let sessionsPerWeek: number | null = null
+      let sessionDurationMinutes: number | null = null
+      if (guidanceIncluded || data.trainerId) {
+        if (!data.trainerId) return { message: "Assign an active trainer for a plan that includes trainer guidance", status: 400 } as const
+        const guidance = trainerGuidanceSchema.safeParse({
+          sessionsPerWeek: data.sessionsPerWeek === undefined && guidanceIncluded ? plan.sessionsPerWeek : data.sessionsPerWeek,
+          sessionDurationMinutes: data.sessionDurationMinutes === undefined && guidanceIncluded ? plan.sessionDurationMinutes : data.sessionDurationMinutes,
+        })
+        if (!guidance.success) return { message: "Enter valid weekly sessions and session length for the assigned trainer", status: 400 } as const
+        sessionsPerWeek = guidance.data.sessionsPerWeek
+        sessionDurationMinutes = guidance.data.sessionDurationMinutes
+      }
+
+      if (!data.trainerId && (data.sessionsPerWeek != null || data.sessionDurationMinutes != null)) {
+        return { message: "Assign a trainer for the requested training sessions", status: 400 } as const
+      }
+      const chargeRequired = !!data.trainerId && requiresAdditionalTrainingCharge(guidanceIncluded, plan, { sessionsPerWeek, sessionDurationMinutes })
+      if (chargeRequired && data.additionalChargeMinor === undefined) {
+        return { message: "Enter the additional training charge, or 0 if no extra charge applies", status: 400 } as const
+      }
+      const additionalChargeMinor = data.additionalChargeMinor ?? 0
+      if (!chargeRequired && additionalChargeMinor > 0) {
+        return { message: "Additional training charges apply only to training outside the plan allowance", status: 400 } as const
       }
 
       if (data.trainerId) {
@@ -59,8 +91,8 @@ export async function POST(req: Request) {
         return { message: "Payment date cannot be in the future", status: 400 } as const
       }
       const amounts = membershipAmounts(plan.basePriceMinor, data.durationMonths, plan.durations[0]?.discountPercent ?? 0,
-        String(data.specialDiscountMinor / 100), String(data.amountReceivedMinor / 100))
-      if (amounts.planAmount > 2147483647 || data.specialDiscountMinor > amounts.planAmount || data.amountReceivedMinor > amounts.finalAmount) {
+        String(data.specialDiscountMinor / 100), String(data.amountReceivedMinor / 100), String(additionalChargeMinor / 100))
+      if (amounts.planAmount > 2147483647 || amounts.finalAmount > 2147483647 || data.specialDiscountMinor > amounts.planAmount || data.amountReceivedMinor > amounts.finalAmount) {
         return { message: "Check the discount and amount received against the selected plan price", status: 400 } as const
       }
       const expiry = membershipExpiry(data.startDate, data.durationMonths)
@@ -85,8 +117,11 @@ export async function POST(req: Request) {
           planId: data.planId,
           planNameSnapshot: plan.name,
           durationMonths: data.durationMonths,
+          sessionsPerWeek,
+          sessionDurationMinutes,
           priceMinor: amounts.planAmount,
           discountMinor: data.specialDiscountMinor,
+          additionalChargeMinor,
           finalMinor: amounts.finalAmount,
           currency: plan.currency,
           paymentStatus: amounts.balance === 0 ? "PAID" : data.amountReceivedMinor > 0 ? "PARTIAL" : "UNPAID",
@@ -122,6 +157,9 @@ export async function POST(req: Request) {
         startDate,
         durationMonths: data.durationMonths,
         trainerId: data.trainerId ?? null,
+        sessionsPerWeek,
+        sessionDurationMinutes,
+        additionalChargeMinor,
       } } as const
     })
 

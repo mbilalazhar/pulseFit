@@ -14,12 +14,13 @@ export function membershipExpiry(startDate: string, months: number): string {
   return renewal.toISOString().slice(0, 10)
 }
 
-export function membershipAmounts(basePriceMinor: number, months: number, discountPercent: number, specialDiscount: string, received: string) {
+export function membershipAmounts(basePriceMinor: number, months: number, discountPercent: number, specialDiscount: string, received: string, additionalCharge = "0") {
   const planAmount = Math.round(basePriceMinor * months * (100 - discountPercent) / 100)
   const discount = Math.max(0, Math.round((Number(specialDiscount) || 0) * 100))
-  const finalAmount = Math.max(0, planAmount - discount)
+  const additionalChargeMinor = Math.max(0, Math.round((Number(additionalCharge) || 0) * 100))
+  const finalAmount = Math.max(0, planAmount - discount) + additionalChargeMinor
   const amountReceived = Math.max(0, Math.round((Number(received) || 0) * 100))
   const balance = Math.max(0, finalAmount - amountReceived)
   const status = balance === 0 ? "Paid" : amountReceived > 0 ? "Partial" : "Pending"
-  return { planAmount, discount, finalAmount, amountReceived, balance, status }
+  return { planAmount, discount, additionalChargeMinor, finalAmount, amountReceived, balance, status }
 }

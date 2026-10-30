@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { trainerGuidanceSchema } from "./trainer-guidance"
 
 export const createMemberSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(120),
@@ -13,7 +14,10 @@ export const createMemberSchema = z.object({
   startDate: z.iso.date("Pick a valid membership start date")
     .refine((value) => value >= "0001-01-01", "Pick a valid membership start date"),
   trainerId: z.string().trim().min(1).nullable().optional(),
+  sessionsPerWeek: trainerGuidanceSchema.shape.sessionsPerWeek.nullable().optional(),
+  sessionDurationMinutes: trainerGuidanceSchema.shape.sessionDurationMinutes.nullable().optional(),
   specialDiscountMinor: z.number().int().min(0).max(2147483647).default(0),
+  additionalChargeMinor: z.number().int().min(0).max(2147483647).optional(),
   amountReceivedMinor: z.number().int().min(0).max(2147483647).default(0),
   paymentDate: z.iso.date().refine((value) => value >= "0001-01-01").optional(),
   paymentMethod: z.enum(["cash", "card", "bank_transfer", "upi", "mobile_wallet", "other"]).default("other"),

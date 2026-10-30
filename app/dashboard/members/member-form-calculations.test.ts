@@ -19,10 +19,20 @@ test("incomplete or invalid dates and durations produce no expiry", () => {
 
 test("prices include duration discounts and use integer minor units", () => {
   assert.deepEqual(membershipAmounts(200000, 12, 25, "2000", "16000"), {
-    planAmount: 1800000, discount: 200000, finalAmount: 1600000,
+    planAmount: 1800000, discount: 200000, additionalChargeMinor: 0, finalAmount: 1600000,
     amountReceived: 1600000, balance: 0, status: "Paid",
   })
   assert.equal(membershipAmounts(9999, 3, 10, "0.29", "").finalAmount, 26968)
+})
+
+test("additional training charges are added once for the purchased duration and affect balance and payment status", () => {
+  assert.deepEqual(membershipAmounts(100000, 6, 10, "400", "5500", "1000"), {
+    planAmount: 540000, discount: 40000, additionalChargeMinor: 100000,
+    finalAmount: 600000, amountReceived: 550000, balance: 50000, status: "Partial",
+  })
+  assert.equal(membershipAmounts(100000, 6, 10, "400", "6000", "1000").status, "Paid")
+  assert.equal(membershipAmounts(10000, 1, 0, "100", "", "25.50").finalAmount, 2550)
+  assert.equal(membershipAmounts(9999, 3, 10, "0.29", "", "10.25").finalAmount, 27993)
 })
 
 test("payment status reflects pending, partial, paid, and fully discounted memberships", () => {

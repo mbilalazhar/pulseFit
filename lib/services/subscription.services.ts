@@ -7,6 +7,8 @@ export type CreatePlanPayload = {
   basePriceMinor: number
   currency: string
   maxHoursPerDay?: number | null
+  sessionsPerWeek?: number | null
+  sessionDurationMinutes?: number | null
   status: PlanStatus
   features: { label: string }[]
   durations: {
@@ -31,7 +33,10 @@ async function parseResponse<T>(response: Response): Promise<T> {
   const data = await response.json().catch(() => null)
 
   if (!response.ok) {
-    throw new Error(data?.message ?? "Something went wrong. Please try again.")
+    const fields = data?.error && typeof data.error === "object"
+      ? Object.values(data.error).flat().filter((value): value is string => typeof value === "string")
+      : []
+    throw new Error(fields.length ? fields.join(" ") : data?.message ?? "Something went wrong. Please try again.")
   }
 
   return data as T
@@ -49,6 +54,15 @@ export async function createPlan(
   return parseResponse<CreatePlanResponse>(response)
 }
 
+export async function updatePlan(id: string, payload: CreatePlanPayload): Promise<CreatePlanResponse> {
+  const response = await fetch(`/api/plan/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  })
+  return parseResponse<CreatePlanResponse>(response)
+}
+
 /* ---------- reading plans ---------- */
 
 export type PlanSummary = {
@@ -59,6 +73,8 @@ export type PlanSummary = {
   basePriceMinor: number
   currency: string
   maxHoursPerDay: number | null
+  sessionsPerWeek: number | null
+  sessionDurationMinutes: number | null
   status: PlanStatus
   features: { id: string; label: string }[]
   durations: {

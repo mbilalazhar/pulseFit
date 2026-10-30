@@ -9,7 +9,8 @@ import { cn } from "@/lib/utils"
 import { usePlanForm, inputClass } from "./plan-form-context"
 
 export function PlanFeatures() {
-  const { facilities, toggleFacility, maxHoursPerDay, setMaxHoursPerDay } = usePlanForm()
+  const { facilities, toggleFacility, maxHoursPerDay, setMaxHoursPerDay,
+    guidanceIncluded, sessionsPerWeek, setSessionsPerWeek, sessionDurationMinutes, setSessionDurationMinutes } = usePlanForm()
 
   return (
     <section aria-labelledby="plan-features-heading" className="space-y-5 rounded-2xl border bg-card p-5">
@@ -31,6 +32,26 @@ export function PlanFeatures() {
           )
         })}
       </div>
+      {guidanceIncluded && (
+        <div className="space-y-3 rounded-xl border bg-muted/30 p-4">
+          <div>
+            <h3 className="text-sm font-medium">Included trainer sessions</h3>
+            <p className="mt-1 text-xs text-muted-foreground">Both settings are required when trainer guidance is included. They become the defaults when you add a member.</p>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="plan-sessions-per-week">Sessions per week <span aria-hidden="true" className="text-destructive">*</span></Label>
+              <Input id="plan-sessions-per-week" type="number" min={1} max={21} step={1} required
+                value={sessionsPerWeek} onChange={(event) => setSessionsPerWeek(event.target.value)} placeholder="e.g. 3" className={inputClass} />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="plan-session-minutes">Session length (minutes) <span aria-hidden="true" className="text-destructive">*</span></Label>
+              <Input id="plan-session-minutes" type="number" min={1} max={1440} step={1} required
+                value={sessionDurationMinutes} onChange={(event) => setSessionDurationMinutes(event.target.value)} placeholder="e.g. 60" className={inputClass} />
+            </div>
+          </div>
+        </div>
+      )}
       <div className="grid items-center gap-4 border-t pt-5 sm:grid-cols-[1fr_180px]">
         <div>
           <Label htmlFor="max-hours-per-day" className="gap-2"><Clock3 className="size-4" />Daily gym access</Label>

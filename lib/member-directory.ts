@@ -69,7 +69,9 @@ export function buildMemberDirectory(records: MemberDirectoryRecord[], timeZone:
 
   const members: MemberSummary[] = records.map((record) => {
     const subscriptions = record.subscriptions.filter((subscription) => subscription.status !== "CANCELLED")
-    const current = subscriptions.find((subscription) => !record.plan || subscription.plan.id === record.plan.id)
+    const matchingSubscriptions = subscriptions.filter((subscription) => !record.plan || subscription.plan.id === record.plan.id)
+    const current = matchingSubscriptions.find((subscription) => subscription.status === "ACTIVE")
+      ?? matchingSubscriptions[0]
     const plan = record.plan ?? current?.plan
     const startDate = (record.startDate ?? current?.startDate)?.toISOString().slice(0, 10) ?? null
     const endDate = current?.endDate.toISOString().slice(0, 10)

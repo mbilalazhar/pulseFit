@@ -17,9 +17,12 @@ model MemberSubscription {
   planId     String
   planNameSnapshot String                                    // [NEW] survives plan rename/delete
   durationMonths Int                                         // [NEW] moved here from Member
+  sessionsPerWeek Int?
+  sessionDurationMinutes Int?
   priceMinor Int
   discountMinor Int @default(0)
-  finalMinor     Int                                         // [NEW] priceMinor - discountMinor (CHECK in SQL)
+  additionalChargeMinor Int @default(0)
+  finalMinor     Int                                         // priceMinor + additionalChargeMinor - discountMinor
   currency String @default("PKR")
   startDate  DateTime
   endDate    DateTime

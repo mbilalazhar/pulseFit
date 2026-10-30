@@ -56,8 +56,8 @@ export function DraftNotice() {
       <div className="flex-1">
         <p className="text-sm font-semibold">Not ready to publish yet?</p>
         <p className="text-sm text-muted-foreground">
-          You can save the plan as a draft and finalize it later when
-          you&apos;re ready.
+          Save a draft and finish its details later. If you include trainer guidance,
+          set its weekly sessions and session length. Unnamed drafts receive a temporary name.
         </p>
       </div>
       <button
