@@ -1,3 +1,5 @@
+import type { TrainerAvailability } from "@/lib/trainer-availability"
+
 export type TrainerType = "STAFF" | "CONTRACTOR"
 export type TrainerShift = "MORNING" | "EVENING" | "NIGHT" | "FLEXIBLE"
 export type ContractorPaymentType = "FIXED_FEE" | "SESSION_BASED"
@@ -9,8 +11,7 @@ export type CreateStaffTrainerPayload = {
   contactNumber: string
   joiningDate: string
   monthlySalary: number
-  workHoursPerDay: number
-  workDaysPerWeek: number
+  availability: TrainerAvailability[]
   shift: TrainerShift
   specializations: string[]
   certifications: string[]
@@ -24,7 +25,7 @@ export type CreateContractorTrainerPayload = {
   joiningDate: string
   paymentType: ContractorPaymentType
   amount: number
-  sessionsPerWeek: number
+  sessions: TrainerAvailability[]
 }
 
 export type CreateTrainerPayload =
@@ -68,6 +69,15 @@ export async function createTrainer(
 
 /* ---------- reading trainers ---------- */
 
+export async function updateTrainer(id: string, payload: CreateTrainerPayload): Promise<CreateTrainerResponse> {
+  const response = await fetch(`/api/trainer/${encodeURIComponent(id)}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  })
+  return parseResponse<CreateTrainerResponse>(response)
+}
+
 export type TrainerStatus = "ACTIVE" | "INACTIVE" | "ON_LEAVE"
 
 export type TrainerSummary = {
@@ -80,6 +90,7 @@ export type TrainerSummary = {
   profilePhotoUrl: string | null
   workHoursPerDay: number | null
   workDaysPerWeek: number | null
+  availability: TrainerAvailability[]
   shift: TrainerShift | null
   contractorPaymentType: ContractorPaymentType | null
   sessionsPerWeek: number | null

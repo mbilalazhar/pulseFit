@@ -7,12 +7,12 @@ import { cn } from "@/lib/utils"
 import { useTrainerForm } from "./trainer-form-context"
 
 export function TrainerActions() {
-  const { handleSubmit, isSubmitting } = useTrainerForm()
+  const { handleSubmit, isSubmitting, isEditing, cancelHref } = useTrainerForm()
 
   return (
     <div className="flex items-center justify-end gap-2">
       <Link
-        href="/dashboard/trainers"
+        href={cancelHref}
         className={cn(buttonVariants({ variant: "outline", size: "lg" }))}
       >
         Cancel
@@ -32,7 +32,7 @@ export function TrainerActions() {
         ) : (
           <>
             <Save className="size-4" />
-            Save Trainer
+            {isEditing ? "Update Trainer" : "Save Trainer"}
           </>
         )}
       </Button>

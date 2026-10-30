@@ -1,5 +1,6 @@
 import { Banknote, CalendarRange, ChartPie, Clock, Users } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { weeklyWorkHours, workingDayNames } from "@/lib/trainer-availability"
 import {
   formatHours,
   formatPkr,
@@ -39,6 +40,7 @@ export function MetricsStrip({ trainer }: { trainer: TrainerDetail }) {
   /* Contractors carry no salary or work-hour fields — they render as untracked
      until the contractor view is defined. */
   const isStaff = trainer.trainerType === "STAFF"
+  const hasAvailability = trainer.availability.length > 0
 
   return (
     <div className="flex flex-wrap divide-x divide-y divide-border overflow-hidden rounded-2xl border bg-card sm:divide-y-0">
@@ -52,14 +54,14 @@ export function MetricsStrip({ trainer }: { trainer: TrainerDetail }) {
       <Metric
         icon={<Clock className="size-5 text-indigo-600 dark:text-indigo-400" />}
         iconClass="bg-indigo-50 dark:bg-indigo-950/50"
-        label="Work Hours / Day"
-        value={isStaff ? formatHours(trainer.workHoursPerDay) : NOT_TRACKED}
+        label={hasAvailability ? "Work Hours / Week" : "Work Hours / Day"}
+        value={isStaff || hasAvailability ? formatHours(hasAvailability ? Number(weeklyWorkHours(trainer.availability).toFixed(2)) : trainer.workHoursPerDay) : NOT_TRACKED}
       />
       <Metric
         icon={<CalendarRange className="size-5 text-emerald-600 dark:text-emerald-400" />}
         iconClass="bg-emerald-50 dark:bg-emerald-950/50"
         label="Working Days"
-        value={isStaff ? workingDaysLabel(trainer.workDaysPerWeek) : NOT_TRACKED}
+        value={isStaff || hasAvailability ? (hasAvailability ? workingDayNames(trainer.availability) : workingDaysLabel(trainer.workDaysPerWeek)) : NOT_TRACKED}
       />
       {/* No trainer-to-member relation exists yet. */}
       <Metric

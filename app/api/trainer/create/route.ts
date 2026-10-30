@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { createTrainerSchema } from "@/lib/validators/trainer";
+import { weeklyWorkHours } from "@/lib/trainer-availability";
 
 export async function POST(req: Request) {
     try {
@@ -21,8 +22,9 @@ export async function POST(req: Request) {
         const compensation = data.trainerType === "STAFF"
             ? {
                 monthlySalaryMinor: Math.round(data.monthlySalary * 100),
-                workHoursPerDay: data.workHoursPerDay,
-                workDaysPerWeek: data.workDaysPerWeek,
+                workHoursPerDay: weeklyWorkHours(data.availability) / data.availability.length,
+                workDaysPerWeek: data.availability.length,
+                availability: { create: data.availability },
                 shift:           data.shift,
                 certifications:  data.certifications,
                 specializations: {
@@ -38,7 +40,8 @@ export async function POST(req: Request) {
                 contractorPaymentType: data.paymentType,
                 fixedFeeAmount:        data.paymentType === "FIXED_FEE"     ? Math.round(data.amount * 100) : null,
                 sessionRate:           data.paymentType === "SESSION_BASED" ? Math.round(data.amount * 100) : null,
-                sessionsPerWeek:       data.sessionsPerWeek,
+                sessionsPerWeek:       data.sessions.length,
+                availability:          { create: data.sessions },
             };
 
         const trainer = await prisma.trainer.create({

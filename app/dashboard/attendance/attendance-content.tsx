@@ -1,5 +1,7 @@
 "use client"
 
+import { DatePicker } from "@/components/ui/date-time-picker"
+
 import { useState } from "react"
 import Image from "next/image"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
@@ -111,7 +113,7 @@ export function AttendanceContent() {
         <div className="flex flex-wrap items-center gap-x-5 gap-y-3 border-b border-border/80">
           <h2 id="member-attendance-title" className="flex items-center gap-2 text-sm font-bold"><BarChart3 className="size-4 text-rose-500" />Member Attendance</h2>
           <div className="flex gap-1">{tabs.map((value) => <button key={value} type="button" aria-pressed={tab === value} onClick={() => setTab(value)} className={cn("whitespace-nowrap border-b-2 px-3 py-3 text-xs transition-colors", tab === value ? "border-rose-500 font-semibold text-rose-600 dark:text-rose-400" : "border-transparent text-muted-foreground hover:text-foreground")}>{value} ({data.rows.filter((row) => row.status === value).length})</button>)}</div>
-          <label className="mb-1 flex items-center gap-2 sm:ml-auto"><CalendarDays className="size-3.5 text-muted-foreground" /><span className="sr-only">Attendance date</span><input type="date" min="1900-01-01" max={data.today} value={data.date} onChange={(event) => setDate(event.target.value)} className="h-9 rounded-lg border border-border bg-card px-3 text-xs outline-none focus:border-rose-400" /></label>
+          <div className="mb-1 flex items-center gap-2 sm:ml-auto"><DatePicker aria-label="Attendance date" min="1900-01-01" max={data.today} value={data.date} onValueChange={(value) => setDate(value || data.today)} className="h-9 rounded-lg border border-border bg-card px-3 text-xs outline-none focus:border-rose-400" /></div>
         </div>
         {query.isError ? <p role="alert" className="text-xs text-rose-600 dark:text-rose-400">Could not refresh attendance. <button type="button" onClick={() => void query.refetch()} className="underline">Try again</button></p> : null}
         <div className="overflow-x-auto rounded-xl">

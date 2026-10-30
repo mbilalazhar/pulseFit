@@ -2,6 +2,7 @@
 
 import { Phone, Mail, CircleCheck } from "lucide-react"
 import { useTrainerForm, formatDate, formatPkr } from "./trainer-form-context"
+import { timeToMinutes, endTimeToMinutes, weeklyWorkHours } from "@/lib/trainer-availability"
 import { TrainerAvatar } from "../trainer-avatar"
 
 function SummaryRow({ label, value }: { label: string; value: string }) {
@@ -16,21 +17,28 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
 export function TrainerPreview() {
   const {
     fullName,
+    profilePhotoUrl,
     email,
     phone,
     trainerType,
     salaryAmount,
-    workHours,
-    workDays,
+    workingDays,
     shift,
     joiningDate,
     pricingModel,
     contractorPrice,
-    sessionsPerWeek,
+    contractorSessions,
     contractorStartDate,
     specializations,
     certifications,
   } = useTrainerForm()
+
+  const schedule = (trainerType === "staff" ? workingDays : contractorSessions).map((day) => ({
+    dayOfWeek: day.dayOfWeek, startMinute: timeToMinutes(day.startTime), endMinute: endTimeToMinutes(day.endTime),
+  }))
+  const validHours = schedule.every((day) => Number.isFinite(day.startMinute) && Number.isFinite(day.endMinute) && day.endMinute > day.startMinute)
+  const totalHours = validHours ? `${Number(weeklyWorkHours(schedule).toFixed(2))} hours / week` : "Set valid hours"
+  const totalDays = new Set(schedule.map((day) => day.dayOfWeek)).size
 
   return (
     <section className="overflow-hidden rounded-2xl border bg-card">
@@ -40,9 +48,8 @@ export function TrainerPreview() {
 
       {/* Identity */}
       <div className="flex flex-col items-center gap-2 bg-muted px-5 py-6">
-        {/* No upload in the form yet, so this always shows the default. */}
         <TrainerAvatar
-          src={null}
+          src={profilePhotoUrl}
           alt={fullName.trim() || "Trainer"}
           size={96}
           className="size-24 border-4 border-card bg-muted"
@@ -94,8 +101,8 @@ export function TrainerPreview() {
               label="Salary (Monthly)"
               value={salaryAmount > 0 ? formatPkr(salaryAmount) : "—"}
             />
-            <SummaryRow label="Work Hours / Day" value={workHours} />
-            <SummaryRow label="Work Days" value={workDays} />
+            <SummaryRow label="Work Days" value={`${workingDays.length} days / week`} />
+            <SummaryRow label="Total Work Hours" value={totalHours} />
             <SummaryRow label="Shift" value={shift} />
             <SummaryRow label="Joining Date" value={formatDate(joiningDate)} />
           </>
@@ -113,7 +120,9 @@ export function TrainerPreview() {
               label="Pricing Model"
               value={pricingModel === "fixed" ? "Fixed Monthly" : "Session-based"}
             />
-            <SummaryRow label="Sessions per Week" value={sessionsPerWeek || "—"} />
+            <SummaryRow label="Sessions per Week" value={String(contractorSessions.length)} />
+            <SummaryRow label="Work Days" value={`${totalDays} days / week`} />
+            <SummaryRow label="Total Work Hours" value={totalHours} />
             <SummaryRow label="Start Date" value={formatDate(contractorStartDate)} />
           </>
         )}

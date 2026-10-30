@@ -47,7 +47,7 @@ export function TrainerSpecializations() {
         </div>
 
         <div id="specializations" className="flex flex-wrap gap-2">
-          {SPECIALIZATIONS.map((name) => {
+          {Array.from(new Set([...SPECIALIZATIONS, ...specializations])).map((name) => {
             const selected = specializations.includes(name)
             return (
               <button

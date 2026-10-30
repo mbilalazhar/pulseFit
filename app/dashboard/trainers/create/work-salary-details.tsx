@@ -3,11 +3,12 @@
 import {
   useTrainerForm,
   areaClass,
-  WORK_HOURS_OPTIONS,
-  WORK_DAYS_OPTIONS,
   SHIFT_OPTIONS,
 } from "./trainer-form-context"
 import { SectionHeading, FieldLabel, SelectField } from "./form-fields"
+import { WorkingDaysFields } from "./working-days-fields"
+import { DatePicker } from "@/components/ui/date-time-picker"
+import { ContractorSessionsFields } from "./contractor-sessions-fields"
 import { cn } from "@/lib/utils"
 
 export function WorkSalaryDetails() {
@@ -16,10 +17,6 @@ export function WorkSalaryDetails() {
     setTrainerType,
     salary,
     setSalary,
-    workHours,
-    setWorkHours,
-    workDays,
-    setWorkDays,
     shift,
     setShift,
     joiningDate,
@@ -28,8 +25,6 @@ export function WorkSalaryDetails() {
     setPricingModel,
     contractorPrice,
     setContractorPrice,
-    sessionsPerWeek,
-    setSessionsPerWeek,
     contractorStartDate,
     setContractorStartDate,
   } = useTrainerForm()
@@ -71,7 +66,7 @@ export function WorkSalaryDetails() {
 
       {/* Staff Trainer Section */}
       {trainerType === "staff" && (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <div className="space-y-1.5">
             <FieldLabel htmlFor="trainer-salary" required>
               Monthly Salary (PKR)
@@ -80,35 +75,13 @@ export function WorkSalaryDetails() {
               <span className="mr-2 text-sm text-muted-foreground">PKR</span>
               <input
                 id="trainer-salary"
-                inputMode="numeric"
+                inputMode="decimal"
                 value={salary}
-                onChange={(e) => setSalary(e.target.value.replace(/[^0-9]/g, ""))}
+                onChange={(e) => { if (/^\d*(?:\.\d{0,2})?$/.test(e.target.value)) setSalary(e.target.value) }}
                 placeholder="Enter monthly salary"
                 className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
               />
             </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <FieldLabel htmlFor="trainer-hours" required>
-              Work Hours / Day
-            </FieldLabel>
-            <SelectField
-              id="trainer-hours"
-              value={workHours}
-              onChange={setWorkHours}
-              options={WORK_HOURS_OPTIONS}
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <FieldLabel htmlFor="trainer-days">Work Days</FieldLabel>
-            <SelectField
-              id="trainer-days"
-              value={workDays}
-              onChange={setWorkDays}
-              options={WORK_DAYS_OPTIONS}
-            />
           </div>
 
           <div className="space-y-1.5">
@@ -125,14 +98,14 @@ export function WorkSalaryDetails() {
             <FieldLabel htmlFor="trainer-joining" required>
               Joining Date
             </FieldLabel>
-            <input
+            <DatePicker
               id="trainer-joining"
-              type="date"
               value={joiningDate}
-              onChange={(e) => setJoiningDate(e.target.value)}
+              onValueChange={setJoiningDate}
               className={cn(areaClass, "h-11 py-0")}
             />
           </div>
+          <WorkingDaysFields />
         </div>
       )}
 
@@ -171,7 +144,7 @@ export function WorkSalaryDetails() {
           </div>
 
           {/* Contractor Fields Grid */}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <FieldLabel htmlFor="contractor-price" required>
                 {pricingModel === "fixed" ? "Monthly Fee (PKR)" : "Price per Session (PKR)"}
@@ -180,9 +153,9 @@ export function WorkSalaryDetails() {
                 <span className="mr-2 text-sm text-muted-foreground">PKR</span>
                 <input
                   id="contractor-price"
-                  inputMode="numeric"
+                  inputMode="decimal"
                   value={contractorPrice}
-                  onChange={(e) => setContractorPrice(e.target.value.replace(/[^0-9]/g, ""))}
+                  onChange={(e) => { if (/^\d*(?:\.\d{0,2})?$/.test(e.target.value)) setContractorPrice(e.target.value) }}
                   placeholder={pricingModel === "fixed" ? "Enter monthly fee" : "Enter price per session"}
                   className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
                 />
@@ -190,32 +163,18 @@ export function WorkSalaryDetails() {
             </div>
 
             <div className="space-y-1.5">
-              <FieldLabel htmlFor="sessions-per-week" required>
-                Sessions per Week
-              </FieldLabel>
-              <input
-                id="sessions-per-week"
-                inputMode="numeric"
-                value={sessionsPerWeek}
-                onChange={(e) => setSessionsPerWeek(e.target.value.replace(/[^0-9]/g, ""))}
-                placeholder="e.g. 3"
-                className={cn(areaClass, "h-11 py-0")}
-              />
-            </div>
-
-            <div className="space-y-1.5">
               <FieldLabel htmlFor="contractor-start-date" required>
                 Start Date
               </FieldLabel>
-              <input
+              <DatePicker
                 id="contractor-start-date"
-                type="date"
                 value={contractorStartDate}
-                onChange={(e) => setContractorStartDate(e.target.value)}
+                onValueChange={setContractorStartDate}
                 className={cn(areaClass, "h-11 py-0")}
               />
             </div>
           </div>
+          <ContractorSessionsFields />
         </div>
       )}
     </section>

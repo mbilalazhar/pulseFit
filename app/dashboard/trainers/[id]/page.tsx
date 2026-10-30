@@ -1,16 +1,18 @@
 import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
-import { ArrowLeft } from "lucide-react"
+import { DashboardHeaderButton } from "@/components/dashboard-header-button"
+import { ArrowLeft, Pencil } from "lucide-react"
 import { prisma } from "@/lib/prisma"
 import { getSession } from "@/lib/auth"
 import { ProfileHeader } from "./profile-header"
 import { AboutPanels } from "./about-panels"
 import { MetricsStrip } from "./metrics-strip"
-import { WeeklySchedule } from "./weekly-schedule"
+import { TrainerScheduling } from "./trainer-scheduling"
+import { dateInTimeZone } from "@/lib/member-status"
+import { mondayOf } from "@/lib/trainer-scheduling"
 import { PackagesTable } from "./packages-table"
-import { UnallocatedMembers } from "./unallocated-members"
-import { getUnallocatedTrainerMembers } from "@/lib/trainer-unallocated-members"
 import type { TrainerDetail } from "./trainer-detail-logic"
+import { WORKING_DAYS, formatWorkTime } from "@/lib/trainer-availability"
 
 export default async function TrainerDetailPage(
   props: PageProps<"/dashboard/trainers/[id]">,
@@ -24,6 +26,8 @@ export default async function TrainerDetailPage(
   const record = await prisma.trainer.findFirst({
     where: { id, gymId: session.gymId },
     include: {
+      gym: { select: { timeZone: true } },
+      availability: { select: { dayOfWeek: true, startMinute: true, endMinute: true } },
       specializations: {
         select: { specialization: { select: { id: true, name: true } } },
       },
@@ -34,8 +38,6 @@ export default async function TrainerDetailPage(
     },
   })
   if (!record) notFound()
-
-  const unallocatedMembers = await getUnallocatedTrainerMembers(session.gymId, record.id)
 
   const trainer: TrainerDetail = {
     ...record,
@@ -56,18 +58,37 @@ export default async function TrainerDetailPage(
         >
           <ArrowLeft className="size-5 text-foreground transition-colors duration-300 group-hover:text-primary-foreground" />
         </Link>
-        <h1 className="font-heading text-2xl font-bold tracking-tight">Trainer Details</h1>
+        <h1 className="flex-1 font-heading text-2xl font-bold tracking-tight">Trainer Details</h1>
+        <DashboardHeaderButton icon={Pencil} text="Edit Trainer" bgColor="primary" href={`/dashboard/trainers/${trainer.id}/edit`} />
       </div>
 
       <ProfileHeader trainer={trainer} />
       <AboutPanels trainer={trainer} />
-      <UnallocatedMembers members={unallocatedMembers} />
       <MetricsStrip trainer={trainer} />
 
-      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1.7fr)_minmax(280px,1fr)]">
-        <WeeklySchedule key={trainer.id} trainerName={trainer.fullName} />
+      {trainer.availability.length > 0 && (
+        <section className="space-y-3 rounded-2xl border bg-card p-5">
+          <h3 className="font-heading text-base font-semibold">{trainer.trainerType === "CONTRACTOR" ? "Weekly Contractor Sessions" : "Working Hours"}</h3>
+          <p className="text-xs text-muted-foreground">Gym local time</p>
+          <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {WORKING_DAYS.map((day) => {
+              const hours = trainer.availability.filter((entry) => entry.dayOfWeek === day.value)
+              return (
+                <div key={day.value} className="rounded-lg bg-muted/50 p-3 text-sm">
+                  <dt className="font-medium">{day.label}</dt>
+                  <dd className="mt-1 text-muted-foreground">
+                    {hours.length ? hours.map((entry) => `${formatWorkTime(entry.startMinute)} – ${formatWorkTime(entry.endMinute)}`).join(", ") : "Day off"}
+                  </dd>
+                </div>
+              )
+            })}
+          </dl>
+        </section>
+      )}
+
+      <TrainerScheduling key={trainer.id} trainerId={trainer.id} trainerName={trainer.fullName} initialWeek={mondayOf(dateInTimeZone(record.gym.timeZone))}>
         <PackagesTable trainer={trainer} />
-      </div>
+      </TrainerScheduling>
     </div>
   )
 }

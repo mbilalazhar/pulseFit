@@ -16,6 +16,7 @@ export async function GET() {
       where: { gymId: session.gymId },
       orderBy: { createdAt: "desc" },
       include: {
+        availability: { select: { dayOfWeek: true, startMinute: true, endMinute: true } },
         specializations: {
           select: { specialization: { select: { id: true, name: true } } },
         },
@@ -33,6 +34,7 @@ export async function GET() {
       profilePhotoUrl: trainer.profilePhotoUrl,
       workHoursPerDay: trainer.workHoursPerDay,
       workDaysPerWeek: trainer.workDaysPerWeek,
+      availability: trainer.availability,
       shift: trainer.shift,
       contractorPaymentType: trainer.contractorPaymentType,
       sessionsPerWeek: trainer.sessionsPerWeek,

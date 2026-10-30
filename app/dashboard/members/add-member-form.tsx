@@ -7,6 +7,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { ArrowLeft, CheckCircle2, Loader2, Plus } from "lucide-react"
 import defaultAvatar from "@/assets/User_Default.png"
 import { Button, buttonVariants } from "@/components/ui/button"
+import { DatePicker } from "@/components/ui/date-time-picker"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { getPlans } from "@/lib/services/subscription.services"
@@ -183,7 +184,7 @@ export function AddMemberForm() {
                 </select>
               </Field>
               <Field id="member-start-date" label="Membership Start Date" required>
-                <MemberInput id="member-start-date" name="startDate" type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} required max="9999-01-01" />
+                <DatePicker id="member-start-date" name="startDate" value={startDate} onValueChange={setStartDate} required max="9999-01-01" className={controlClassName} />
               </Field>
               <Field id="member-duration" label="Membership Duration" required>
                 <select id="member-duration" name="durationMonths" value={durationMonths} onChange={(event) => { setDurationMonths(Number(event.target.value)); setAdditionalCharge(""); setSpecialDiscount(""); setReceived("") }} required className={controlClassName}>
@@ -226,7 +227,7 @@ export function AddMemberForm() {
           <Section id="payment-details" title="Payment Details">
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               <Field id="member-payment-date" label="Payment Date" required>
-                <MemberInput id="member-payment-date" name="paymentDate" type="date" defaultValue={today()} max={today()} required />
+                <DatePicker id="member-payment-date" name="paymentDate" defaultValue={today()} max={today()} required className={controlClassName} />
               </Field>
               <Field id="member-plan-amount" label="Plan Amount" help="Includes any discount configured for the selected duration.">
                 <MemberInput id="member-plan-amount" value={money(amounts.planAmount)} readOnly aria-describedby="member-plan-amount-help" />

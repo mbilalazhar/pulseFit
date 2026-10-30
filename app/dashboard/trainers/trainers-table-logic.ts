@@ -1,4 +1,5 @@
 import type { TrainerSummary } from "@/lib/services/trainer.services"
+import { weeklyWorkHours, workingDayNames } from "@/lib/trainer-availability"
 
 export const ITEMS_PER_PAGE = 7
 
@@ -31,6 +32,10 @@ export function schedule(trainer: TrainerSummary) {
       secondary:
         trainer.contractorPaymentType === "FIXED_FEE" ? "Fixed monthly fee" : "Per session",
     }
+  }
+  if (trainer.availability?.length) return {
+    primary: `${Number(weeklyWorkHours(trainer.availability).toFixed(2))}h / week`,
+    secondary: workingDayNames(trainer.availability),
   }
   return {
     primary: trainer.workHoursPerDay ? `${trainer.workHoursPerDay}h / day` : "—",

@@ -1,7 +1,10 @@
+"use client"
+
 import { CalendarClock, Clock3, Users } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import type { UnallocatedTrainerMember } from "@/lib/trainer-unallocated-members"
 
-export function UnallocatedMembers({ members }: { members: UnallocatedTrainerMember[] }) {
+export function UnallocatedMembers({ members, onAllocate }: { members: UnallocatedTrainerMember[]; onAllocate: (member: UnallocatedTrainerMember) => void }) {
   return (
     <section aria-labelledby="unallocated-members-title" className="min-w-0 overflow-hidden rounded-2xl border bg-card">
       <div className="flex flex-wrap items-start justify-between gap-3 p-5">
@@ -35,6 +38,7 @@ export function UnallocatedMembers({ members }: { members: UnallocatedTrainerMem
                 <th scope="col" className="px-5 py-3 text-left font-medium">Membership Plan</th>
                 <th scope="col" className="whitespace-nowrap px-5 py-3 text-left font-medium">Sessions to Allocate</th>
                 <th scope="col" className="whitespace-nowrap px-5 py-3 text-left font-medium">Allowed Session Length</th>
+                <th scope="col" className="px-5 py-3 text-right font-medium">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -59,6 +63,9 @@ export function UnallocatedMembers({ members }: { members: UnallocatedTrainerMem
                         {member.sessionDurationMinutes} {member.sessionDurationMinutes === 1 ? "minute" : "minutes"} / session
                       </span>
                     )}
+                  </td>
+                  <td className="px-5 py-4 text-right">
+                    <Button type="button" variant="outline" onClick={() => onAllocate(member)} aria-label={`Assign sessions to ${member.name}`}><CalendarClock className="size-3.5" />Assign sessions</Button>
                   </td>
                 </tr>
               ))}

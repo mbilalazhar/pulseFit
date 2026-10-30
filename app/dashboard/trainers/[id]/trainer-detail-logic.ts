@@ -1,3 +1,5 @@
+import type { TrainerAvailability } from "@/lib/trainer-availability"
+
 import type {
   ContractorPaymentType,
   TrainerShift,
@@ -24,6 +26,7 @@ export type TrainerDetail = {
   monthlySalary: number | null
   workHoursPerDay: number | null
   workDaysPerWeek: number | null
+  availability: TrainerAvailability[]
   shift: TrainerShift | null
   contractorPaymentType: ContractorPaymentType | null
   fixedFeeAmount: number | null

@@ -1,5 +1,6 @@
 // lib/validators/trainer.ts
 import { z } from "zod";
+import { contractorSessionsSchema, trainerAvailabilitySchema } from "@/lib/trainer-availability";
 
 export const MAX_SPECIALIZATIONS = 3;
 
@@ -16,8 +17,7 @@ const staffTrainerSchema = z.object({
   ...baseTrainerSchema,
   trainerType:     z.literal("STAFF"),
   monthlySalary:   z.number().positive("Salary must be greater than zero").max(21474836.47),
-  workHoursPerDay: z.number().positive().max(24),
-  workDaysPerWeek: z.number().int().min(1).max(7),
+  availability:   trainerAvailabilitySchema,
   shift:           z.enum(["MORNING", "EVENING", "NIGHT", "FLEXIBLE"]),
 
   specializations: z
@@ -35,7 +35,7 @@ const contractorTrainerSchema = z.object({
   trainerType:     z.literal("CONTRACTOR"),
   paymentType:     z.enum(["FIXED_FEE", "SESSION_BASED"]),
   amount:          z.number().positive("Amount must be greater than zero").max(21474836.47),
-  sessionsPerWeek: z.number().int().positive("Sessions per week must be greater than zero").max(21),
+  sessions:       contractorSessionsSchema,
 });
 
 export const createTrainerSchema = z.discriminatedUnion("trainerType", [
@@ -44,3 +44,6 @@ export const createTrainerSchema = z.discriminatedUnion("trainerType", [
 ]);
 
 export type CreateTrainerInput = z.infer<typeof createTrainerSchema>;
+
+// Editing uses the same complete form and validation as creation.
+export const updateTrainerSchema = createTrainerSchema;

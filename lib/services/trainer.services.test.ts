@@ -11,7 +11,7 @@ test("surfaces trainer field validation errors to the form", async () => {
   await assert.rejects(createTrainer({
     trainerType: "STAFF", fullName: "Coach", email: "coach@example.com",
     contactNumber: "03001234567", joiningDate: "2026-01-01", monthlySalary: 50000,
-    workHoursPerDay: 8, workDaysPerWeek: 5, shift: "MORNING",
+    availability: [{ dayOfWeek: 1, startMinute: 720, endMinute: 1200 }], shift: "FLEXIBLE",
     specializations: ["Yoga", "Yoga"], certifications: [],
   }), /Each specialization must be unique/)
 })

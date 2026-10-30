@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { CircleCheck, Pencil } from "lucide-react"
 import { NOT_TRACKED, type TrainerDetail } from "./trainer-detail-logic"
 
@@ -21,17 +22,16 @@ function Panel({
   )
 }
 
-/* No edit flow exists yet, so these are placeholders matching the design. */
-function EditButton({ label }: { label: string }) {
+function EditButton({ label, trainerId }: { label: string; trainerId: string }) {
   return (
-    <button
-      type="button"
+    <Link
+      href={`/dashboard/trainers/${trainerId}/edit`}
       aria-label={label}
       className="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
     >
       <Pencil className="size-3.5" />
       Edit
-    </button>
+    </Link>
   )
 }
 
@@ -45,7 +45,7 @@ export function AboutPanels({ trainer }: { trainer: TrainerDetail }) {
         </p>
       </Panel>
 
-      <Panel title="Tags & Specialties" action={<EditButton label="Edit specialties" />}>
+      <Panel title="Tags & Specialties" action={trainer.trainerType === "STAFF" ? <EditButton label="Edit specialties" trainerId={trainer.id} /> : undefined}>
         {trainer.specializations.length > 0 ? (
           <div className="flex flex-wrap gap-2">
             {trainer.specializations.map((spec) => (
@@ -62,7 +62,7 @@ export function AboutPanels({ trainer }: { trainer: TrainerDetail }) {
         )}
       </Panel>
 
-      <Panel title="Certifications" action={<EditButton label="Edit certifications" />}>
+      <Panel title="Certifications" action={trainer.trainerType === "STAFF" ? <EditButton label="Edit certifications" trainerId={trainer.id} /> : undefined}>
         {trainer.certifications.length > 0 ? (
           <ul className="space-y-2.5">
             {trainer.certifications.map((cert) => (

@@ -12,20 +12,24 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 import {
   createTrainer,
+  updateTrainer,
+  type CreateTrainerPayload,
   type ContractorPaymentType,
   type TrainerShift,
 } from "@/lib/services/trainer.services"
+import { trainerScheduleFields, type TrainerFormData } from "@/lib/trainer-form-data"
+import { WORKING_DAYS, timeToMinutes, endTimeToMinutes, trainerAvailabilitySchema, contractorSessionsSchema } from "@/lib/trainer-availability"
 
 /* ---------- types ---------- */
 
 export type TrainerType = "staff" | "contractor"
 export type PricingModel = "fixed" | "session"
 export type Certification = { id: string; text: string }
+export type ContractorSessionInput = WorkingDayInput & { id: string }
+export type WorkingDayInput = { dayOfWeek: number; startTime: string; endTime: string }
 
 /* ---------- constants ---------- */
 
-export const WORK_HOURS_OPTIONS = ["4 Hours", "6 Hours", "8 Hours", "10 Hours", "12 Hours"]
-export const WORK_DAYS_OPTIONS = ["5 Days / Week", "6 Days / Week", "7 Days / Week"]
 export const SHIFT_OPTIONS = ["Morning Shift", "Evening Shift", "Night Shift", "Flexible"]
 
 /* A trainer is tagged with the handful of things they actually coach. */
@@ -83,12 +87,12 @@ export function formatDate(iso: string) {
 
 export const formatPkr = (amount: number) => `PKR ${amount.toLocaleString()}`
 
-/* "8 Hours" / "6 Days / Week" carry their number as the leading token. */
-const leadingNumber = (label: string) => Number(label.split(" ")[0]) || 0
-
 /* ---------- context ---------- */
 
 type TrainerFormValue = {
+  isEditing: boolean
+  cancelHref: string
+  profilePhotoUrl: string | null
   fullName: string
   setFullName: (v: string) => void
   email: string
@@ -101,10 +105,9 @@ type TrainerFormValue = {
 
   salary: string
   setSalary: (v: string) => void
-  workHours: string
-  setWorkHours: (v: string) => void
-  workDays: string
-  setWorkDays: (v: string) => void
+  workingDays: WorkingDayInput[]
+  toggleWorkingDay: (dayOfWeek: number) => void
+  updateWorkingTime: (dayOfWeek: number, field: "startTime" | "endTime", value: string) => void
   shift: string
   setShift: (v: string) => void
   joiningDate: string
@@ -114,8 +117,10 @@ type TrainerFormValue = {
   setPricingModel: (v: PricingModel) => void
   contractorPrice: string
   setContractorPrice: (v: string) => void
-  sessionsPerWeek: string
-  setSessionsPerWeek: (v: string) => void
+  contractorSessions: ContractorSessionInput[]
+  addContractorSession: () => void
+  removeContractorSession: (id: string) => void
+  updateContractorSession: (id: string, changes: Partial<WorkingDayInput>) => void
   contractorStartDate: string
   setContractorStartDate: (v: string) => void
 
@@ -142,32 +147,65 @@ export function useTrainerForm() {
   return ctx
 }
 
-export function TrainerFormProvider({ children }: { children: ReactNode }) {
+export function TrainerFormProvider({ children, initialTrainer }: { children: ReactNode; initialTrainer?: TrainerFormData }) {
   const router = useRouter()
   const queryClient = useQueryClient()
 
-  const [fullName, setFullName] = useState("")
-  const [email, setEmail] = useState("")
-  const [phone, setPhone] = useState("")
+  const [fullName, setFullName] = useState(initialTrainer?.fullName ?? "")
+  const [email, setEmail] = useState(initialTrainer?.email ?? "")
+  const [phone, setPhone] = useState(initialTrainer?.contactNumber ?? "")
 
-  const [trainerType, setTrainerType] = useState<TrainerType>("staff")
+  const [trainerType, setTrainerType] = useState<TrainerType>(initialTrainer?.trainerType === "CONTRACTOR" ? "contractor" : "staff")
 
-  const [salary, setSalary] = useState("")
-  const [workHours, setWorkHours] = useState(WORK_HOURS_OPTIONS[2])
-  const [workDays, setWorkDays] = useState(WORK_DAYS_OPTIONS[1])
-  const [shift, setShift] = useState(SHIFT_OPTIONS[0])
-  const [joiningDate, setJoiningDate] = useState("")
+  const [salary, setSalary] = useState(initialTrainer?.monthlySalary?.toString() ?? "")
+  const [workingDays, setWorkingDays] = useState<WorkingDayInput[]>(
+    initialTrainer?.trainerType === "STAFF" ? trainerScheduleFields(initialTrainer.availability) : WORKING_DAYS.filter((day) => day.value !== 0).map((day) => ({
+      dayOfWeek: day.value, startTime: "12:00", endTime: "20:00",
+    })),
+  )
+  const [shift, setShift] = useState(Object.entries(SHIFT_VALUES).find(([, value]) => value === initialTrainer?.shift)?.[0] ?? SHIFT_OPTIONS[3])
+  const [joiningDate, setJoiningDate] = useState(initialTrainer?.joiningDate ?? "")
 
-  const [pricingModel, setPricingModel] = useState<PricingModel>("session")
-  const [contractorPrice, setContractorPrice] = useState("")
-  const [sessionsPerWeek, setSessionsPerWeek] = useState("")
-  const [contractorStartDate, setContractorStartDate] = useState("")
+  const [pricingModel, setPricingModel] = useState<PricingModel>(initialTrainer?.contractorPaymentType === "FIXED_FEE" ? "fixed" : "session")
+  const [contractorPrice, setContractorPrice] = useState((initialTrainer?.contractorPaymentType === "FIXED_FEE" ? initialTrainer.fixedFeeAmount : initialTrainer?.sessionRate)?.toString() ?? "")
+  const [contractorSessions, setContractorSessions] = useState<ContractorSessionInput[]>(initialTrainer?.trainerType === "CONTRACTOR"
+    ? trainerScheduleFields(initialTrainer.availability).map((session, index) => ({ ...session, id: `saved-session-${index}` }))
+    : [
+    { id: "first-session", dayOfWeek: 1, startTime: "12:00", endTime: "13:00" },
+  ])
+  const [contractorStartDate, setContractorStartDate] = useState(initialTrainer?.joiningDate ?? "")
 
-  const [specializations, setSpecializations] = useState<string[]>([])
-  const [certifications, setCertifications] = useState<Certification[]>([])
+  const [specializations, setSpecializations] = useState<string[]>(initialTrainer?.specializations ?? [])
+  const [certifications, setCertifications] = useState<Certification[]>(initialTrainer?.certifications.map((text, index) => ({ id: `saved-cert-${index}`, text })) ?? [])
   const [certDraft, setCertDraft] = useState("")
 
   const salaryAmount = Number(salary) || 0
+
+  const toggleWorkingDay = (dayOfWeek: number) => {
+    setWorkingDays((days) => days.some((day) => day.dayOfWeek === dayOfWeek)
+      ? days.filter((day) => day.dayOfWeek !== dayOfWeek)
+      : [...days, { dayOfWeek, startTime: "12:00", endTime: "20:00" }]
+        .sort((a, b) => ((a.dayOfWeek + 6) % 7) - ((b.dayOfWeek + 6) % 7)))
+  }
+
+  const updateWorkingTime = (dayOfWeek: number, field: "startTime" | "endTime", value: string) => {
+    setWorkingDays((days) => days.map((day) => day.dayOfWeek === dayOfWeek ? { ...day, [field]: value } : day))
+  }
+
+  const addContractorSession = () => {
+    setContractorSessions((sessions) => {
+      if (sessions.length >= 21) return sessions
+      const last = sessions.at(-1)
+      const end = last ? endTimeToMinutes(last.endTime) : NaN
+      const sameDay = Number.isFinite(end) && end + 60 < 1440
+      const start = sameDay ? end : 720
+      const time = (minutes: number) => `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`
+      return [...sessions, { id: crypto.randomUUID(), dayOfWeek: last ? (sameDay ? last.dayOfWeek : (last.dayOfWeek + 1) % 7) : 1, startTime: time(start), endTime: time(start + 60) }]
+    })
+  }
+
+  const removeContractorSession = (id: string) => setContractorSessions((sessions) => sessions.filter((session) => session.id !== id))
+  const updateContractorSession = (id: string, changes: Partial<WorkingDayInput>) => setContractorSessions((sessions) => sessions.map((session) => session.id === id ? { ...session, ...changes } : session))
 
   const toggleSpecialization = (name: string) => {
     if (specializations.includes(name)) {
@@ -196,11 +234,13 @@ export function TrainerFormProvider({ children }: { children: ReactNode }) {
     setCertifications((prev) => prev.filter((c) => c.id !== id))
 
   const mutation = useMutation({
-    mutationFn: createTrainer,
+    mutationFn: (payload: CreateTrainerPayload) => initialTrainer ? updateTrainer(initialTrainer.id, payload) : createTrainer(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["trainers"] })
-      toast.success("Trainer created successfully.")
-      router.push("/dashboard/trainers")
+      if (initialTrainer) queryClient.invalidateQueries({ queryKey: ["trainer-schedule", initialTrainer.id] })
+      toast.success(initialTrainer ? "Trainer updated successfully." : "Trainer created successfully.")
+      router.push(initialTrainer ? `/dashboard/trainers/${initialTrainer.id}` : "/dashboard/trainers")
+      router.refresh()
     },
     onError: (error: Error) => {
       toast.error(error.message)
@@ -208,6 +248,7 @@ export function TrainerFormProvider({ children }: { children: ReactNode }) {
   })
 
   const handleSubmit = () => {
+    if (mutation.isPending) return
     if (!fullName.trim()) {
       toast.error("Enter the trainer's full name.")
       return
@@ -222,6 +263,17 @@ export function TrainerFormProvider({ children }: { children: ReactNode }) {
     }
 
     if (trainerType === "staff") {
+      const availability = trainerAvailabilitySchema.safeParse(workingDays.map((day) => ({
+        dayOfWeek: day.dayOfWeek,
+        startMinute: timeToMinutes(day.startTime),
+        endMinute: endTimeToMinutes(day.endTime),
+      })))
+      if (!availability.success) {
+        toast.error(workingDays.length === 0
+          ? "Select at least one working day."
+          : "Set a valid start and end time for each working day. End time must be after start time.")
+        return
+      }
       if (salaryAmount <= 0) {
         toast.error("Enter a monthly salary greater than zero.")
         return
@@ -242,8 +294,7 @@ export function TrainerFormProvider({ children }: { children: ReactNode }) {
         contactNumber: phone.trim(),
         joiningDate,
         monthlySalary: salaryAmount,
-        workHoursPerDay: leadingNumber(workHours),
-        workDaysPerWeek: leadingNumber(workDays),
+        availability: availability.data,
         shift: SHIFT_VALUES[shift],
         specializations,
         certifications: certifications.map((c) => c.text),
@@ -252,13 +303,17 @@ export function TrainerFormProvider({ children }: { children: ReactNode }) {
     }
 
     const price = Number(contractorPrice) || 0
-    const sessions = Number(sessionsPerWeek) || 0
+    const sessions = contractorSessionsSchema.safeParse(contractorSessions.map((session) => ({
+      dayOfWeek: session.dayOfWeek,
+      startMinute: timeToMinutes(session.startTime),
+      endMinute: endTimeToMinutes(session.endTime),
+    })))
     if (price <= 0) {
       toast.error("Enter a price greater than zero.")
       return
     }
-    if (sessions <= 0) {
-      toast.error("Enter sessions per week greater than zero.")
+    if (!sessions.success) {
+      toast.error(contractorSessions.length === 0 ? "Add at least one weekly session." : "Give each session a valid time range. Sessions on the same day must not overlap.")
       return
     }
     if (!contractorStartDate) {
@@ -274,12 +329,15 @@ export function TrainerFormProvider({ children }: { children: ReactNode }) {
       joiningDate: contractorStartDate,
       paymentType: PAYMENT_TYPES[pricingModel],
       amount: price,
-      sessionsPerWeek: sessions,
+      sessions: sessions.data,
     })
   }
 
   const value = useMemo<TrainerFormValue>(
     () => ({
+      isEditing: !!initialTrainer,
+      cancelHref: initialTrainer ? `/dashboard/trainers/${initialTrainer.id}` : "/dashboard/trainers",
+      profilePhotoUrl: initialTrainer?.profilePhotoUrl ?? null,
       fullName,
       setFullName,
       email,
@@ -290,10 +348,9 @@ export function TrainerFormProvider({ children }: { children: ReactNode }) {
       setTrainerType,
       salary,
       setSalary,
-      workHours,
-      setWorkHours,
-      workDays,
-      setWorkDays,
+      workingDays,
+      toggleWorkingDay,
+      updateWorkingTime,
       shift,
       setShift,
       joiningDate,
@@ -302,8 +359,10 @@ export function TrainerFormProvider({ children }: { children: ReactNode }) {
       setPricingModel,
       contractorPrice,
       setContractorPrice,
-      sessionsPerWeek,
-      setSessionsPerWeek,
+      contractorSessions,
+      addContractorSession,
+      removeContractorSession,
+      updateContractorSession,
       contractorStartDate,
       setContractorStartDate,
       specializations,
@@ -319,18 +378,18 @@ export function TrainerFormProvider({ children }: { children: ReactNode }) {
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
+      initialTrainer,
       fullName,
       email,
       phone,
       trainerType,
       salary,
-      workHours,
-      workDays,
+      workingDays,
       shift,
       joiningDate,
       pricingModel,
       contractorPrice,
-      sessionsPerWeek,
+      contractorSessions,
       contractorStartDate,
       specializations,
       certifications,

@@ -95,7 +95,7 @@ export function TrainersTable() {
         ))}
       </div>
 
-      <div className="overflow-x-auto rounded-xl">
+      <div className="overflow-x-auto">
         <div className="min-w-[1060px]">
           {/* Column labels */}
           <div
@@ -125,10 +125,8 @@ export function TrainersTable() {
                     href={`/dashboard/trainers/${trainer.id}`}
                     className={cn(
                       ROW_GRID,
-                      "group relative rounded-sm px-4 py-4 text-[13px]",
-                      "transition-[transform,box-shadow,background-color,border-color] duration-200 ease-out",
-                      /* Lift the row out of the list on hover. */
-                      "hover:z-10 hover:-translate-y-1 hover:border-transparent hover:bg-card hover:shadow-lg hover:shadow-black/10",
+                      "group relative px-4 py-4 text-[13px]",
+                      "border-b border-border transition-colors duration-200 ease-out hover:z-10 hover:translate-y-0.75 hover:bg-muted hover:shadow-[0_5px_18px_var(--color-member-row-shadow)]",
                     )}
                   >
                     {/* Trainer */}
