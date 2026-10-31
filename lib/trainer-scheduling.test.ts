@@ -27,9 +27,21 @@ test("rejects partial allocations, times outside work hours, expired dates, and 
     { date: "2026-10-26", startMinute: 720 },
   ]) assert.throws(() => prepareAllocation({ ...input, slots: [slot, input.slots[1]] }, options))
   assert.throws(() => prepareAllocation(input, { ...options, membershipEnd: "2026-10-21" }), /membership/)
-  assert.throws(() => prepareAllocation(input, { ...options, membershipStart: "2026-10-20" }), /membership/)
-  assert.throws(() => prepareAllocation(input, { ...options, now: new Date("2026-10-19T07:00:00Z") }), /future/)
+  assert.throws(() => prepareAllocation(input, { ...options, membershipStart: "2026-10-26" }), /membership/)
+  assert.throws(() => prepareAllocation(input, { ...options, now: new Date("2026-10-26T07:00:00Z") }), /current week/)
   assert.throws(() => prepareAllocation({ ...input, slots: [input.slots[0], input.slots[0]] }, options), /overlap/)
+})
+
+test("allows all working days in the membership-start week, including before today and the start date", () => {
+  const sessions = prepareAllocation(input, { ...options, membershipStart: "2026-10-23", now: new Date("2026-10-23T07:00:00Z") })
+  assert.equal(sessions.length, 2)
+  assert.equal(sessions[0].startsAt.toISOString(), "2026-10-19T07:00:00.000Z")
+  for (const session of sessions) assert.equal(session.endsAt.getTime() - session.startsAt.getTime(), 45 * 60_000)
+})
+
+test("rejects off days and invalid session lengths", () => {
+  assert.throws(() => prepareAllocation({ ...input, slots: [{ date: "2026-10-20", startMinute: 720 }, input.slots[1]] }, options), /working hours/)
+  for (const duration of [0, -30, 45.5]) assert.throws(() => prepareAllocation(input, { ...options, sessionDurationMinutes: duration }), /session length/)
 })
 
 test("sessions cannot span a gap in contractor hours and adjacent bookings are allowed", () => {

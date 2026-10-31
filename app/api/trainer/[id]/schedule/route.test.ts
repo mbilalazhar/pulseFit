@@ -28,7 +28,7 @@ const subscription = { status: "ACTIVE", sessionsPerWeek: 2, sessionDurationMinu
 
 beforeEach(() => {
   session = { gymId: "gym-1", role: "ADMIN" }
-  trainer = { status: "ACTIVE", gym: { timeZone: "Asia/Karachi" }, availability: [{ dayOfWeek: 1, startMinute: 720, endMinute: 1200 }, { dayOfWeek: 3, startMinute: 600, endMinute: 900 }] }
+  trainer = { status: "ACTIVE", gym: { timeZone: "Asia/Karachi" }, _count: { assignments: 3 }, availability: [{ dayOfWeek: 1, startMinute: 720, endMinute: 1200 }, { dayOfWeek: 3, startMinute: 600, endMinute: 900 }] }
   member = { id: "member-1", status: "ACTIVE", subscriptions: [subscription] }
   bookings = []
   existingAllocation = null
@@ -71,6 +71,20 @@ test("rejects malformed, partial, and out-of-hours allocations without inserting
   assert.equal(createMany.mock.callCount(), 0)
 })
 
+test("saves earlier working days in the selected week before today and the membership start", async () => {
+  mock.timers.enable({ apis: ["Date"], now: new Date("2030-10-24T12:00:00Z") })
+  try {
+    member = { id: "member-1", status: "ACTIVE", subscriptions: [{ ...subscription, startDate: new Date("2030-10-24") }] }
+    assert.equal((await post()).status, 201)
+    const data = createMany.mock.calls[0].arguments[0].data as { startsAt: Date; endsAt: Date }[]
+    assert.equal(data[0].startsAt.toISOString(), "2030-10-21T07:00:00.000Z")
+    assert.equal(data[1].startsAt.toISOString(), "2030-10-23T05:00:00.000Z")
+    for (const row of data) assert.equal(row.endsAt.getTime() - row.startsAt.getTime(), 45 * 60_000)
+  } finally {
+    mock.timers.reset()
+  }
+})
+
 test("rejects unavailable trainers, unassigned members, frozen memberships and missing allowances", async () => {
   trainer = null
   assert.equal((await post()).status, 404)
@@ -110,6 +124,8 @@ test("loads only real bookings for this gym, trainer, and selected local week", 
   const data = await response.json()
   assert.equal(data.weekStart, "2030-10-21")
   assert.deepEqual(data.sessions, [])
+  assert.equal(data.memberCount, 3)
+  assert.deepEqual(data.workload, { totalWorkHours: 13, actualWorkHours: 0, workloadPercent: 0 })
   assert.equal(data.members[0].name, "Ali")
   assert.equal(unallocated.mock.calls[0].arguments[0], "gym-1")
   assert.equal(unallocated.mock.calls[0].arguments[1], "trainer-1")
@@ -132,4 +148,5 @@ test("returns saved member names and local time ranges for the timetable", async
   assert.equal(data.sessions[0].date, "2030-10-21")
   assert.equal(data.sessions[0].startMinute, 720)
   assert.equal(data.sessions[0].endMinute, 765)
+  assert.deepEqual(data.workload, { totalWorkHours: 13, actualWorkHours: 0.75, workloadPercent: 5.8 })
 })
