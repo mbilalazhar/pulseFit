@@ -41,8 +41,7 @@ export type TrainerDetail = {
   }[]
 }
 
-/* Stands in for every value the schema cannot supply yet — member counts,
-   workload, salary payment history, session bookings. */
+/* Placeholder for optional values that have not been configured. */
 export const NOT_TRACKED = "—"
 
 export const formatPkr = (amount: number | null | undefined) =>

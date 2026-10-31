@@ -58,15 +58,18 @@ export function prepareAllocation(input: AllocationInput, options: {
   now: Date
 }) {
   if (mondayOf(input.weekStart) !== input.weekStart) throw new Error("Select a week starting on Monday.")
+  if (input.weekStart < mondayOf(dateInTimeZone(options.timeZone, options.now))) throw new Error("Select the current week or a later week.")
+  if (!Number.isInteger(options.sessionDurationMinutes) || options.sessionDurationMinutes <= 0) throw new Error("Configure a valid session length for this member.")
   if (input.slots.length !== options.sessionsPerWeek) throw new Error(`Allocate all ${options.sessionsPerWeek} weekly sessions together.`)
   const weekEnd = shiftDate(input.weekStart, 7)
   const sessions = input.slots.map((slot) => {
     if (slot.date < input.weekStart || slot.date >= weekEnd) throw new Error("All sessions must be in the selected week.")
-    if (slot.date < options.membershipStart || slot.date >= options.membershipEnd) throw new Error("Session dates must fall within the member's purchased membership.")
+    // The first allocation covers the whole membership-start week, including
+    // working days before the member's start date or the current day.
+    if (slot.date < mondayOf(options.membershipStart) || slot.date >= options.membershipEnd) throw new Error("Session dates must fall within the member's purchased membership weeks and before expiry.")
     if (!fitsWorkHours(options.availability, slot.date, slot.startMinute, options.sessionDurationMinutes)) throw new Error("Each session must fit entirely within the trainer's working hours.")
     const startsAt = gymInstant(slot.date, slot.startMinute, options.timeZone)
     const endsAt = gymInstant(slot.date, slot.startMinute + options.sessionDurationMinutes, options.timeZone)
-    if (startsAt <= options.now) throw new Error("Session times must be in the future.")
     if (endsAt.getTime() - startsAt.getTime() !== options.sessionDurationMinutes * 60_000) throw new Error("A session cannot cross a daylight-saving clock change.")
     return { startsAt, endsAt }
   })

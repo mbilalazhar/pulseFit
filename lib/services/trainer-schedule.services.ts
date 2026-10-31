@@ -1,6 +1,7 @@
 import type { TrainerAvailability } from "@/lib/trainer-availability"
 import type { AllocationInput, ScheduleSession } from "@/lib/trainer-scheduling"
 import type { UnallocatedTrainerMember } from "@/lib/trainer-unallocated-members"
+import type { TrainerWorkload } from "@/lib/trainer-workload"
 
 export type TrainerScheduleData = {
   weekStart: string
@@ -10,6 +11,8 @@ export type TrainerScheduleData = {
   availability: TrainerAvailability[]
   sessions: ScheduleSession[]
   members: UnallocatedTrainerMember[]
+  memberCount: number
+  workload: TrainerWorkload
 }
 
 async function responseData<T>(response: Response): Promise<T> {

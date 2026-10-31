@@ -6,6 +6,7 @@ import { dateInTimeZone } from "@/lib/member-status"
 import { shiftDate } from "@/lib/attendance"
 import { getUnallocatedTrainerMembers } from "@/lib/trainer-unallocated-members"
 import { allocationSchema, gymInstant, mondayOf, overlaps, prepareAllocation, scheduleSegments } from "@/lib/trainer-scheduling"
+import { calculateTrainerWorkload } from "@/lib/trainer-workload"
 
 type Context = { params: Promise<{ id: string }> }
 class AllocationError extends Error {
@@ -21,7 +22,7 @@ export async function GET(req: Request, context: Context) {
     const session = await getSession()
     if (!session || session.role !== "ADMIN") return NextResponse.json({ message: "Not Authenticated" }, { status: 401 })
     const { id } = await context.params
-    const trainer = await prisma.trainer.findFirst({ where: { id, gymId: session.gymId }, include: { gym: { select: { timeZone: true } }, availability: true } })
+    const trainer = await prisma.trainer.findFirst({ where: { id, gymId: session.gymId }, include: { gym: { select: { timeZone: true } }, availability: true, _count: { select: { assignments: { where: { gymId: session.gymId, endedAt: null, member: { deletedAt: null } } } } } } })
     if (!trainer) return NextResponse.json({ message: "Trainer not found" }, { status: 404 })
     const now = new Date()
     const today = dateInTimeZone(trainer.gym.timeZone, now)
@@ -39,6 +40,8 @@ export async function GET(req: Request, context: Context) {
       weekStart, today, timeZone: trainer.gym.timeZone, trainerStatus: trainer.status,
       availability: trainer.availability.map(({ dayOfWeek, startMinute, endMinute }) => ({ dayOfWeek, startMinute, endMinute })),
       sessions: records.flatMap((record) => scheduleSegments(record, weekStart, trainer.gym.timeZone)), members,
+      memberCount: trainer._count.assignments,
+      workload: calculateTrainerWorkload(trainer.availability, records, weekStart, trainer.gym.timeZone),
     }, { headers: { "Cache-Control": "private, no-store" } })
   } catch (error) {
     console.error("Load trainer schedule:", error)

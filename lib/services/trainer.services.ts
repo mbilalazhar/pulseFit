@@ -1,4 +1,5 @@
 import type { TrainerAvailability } from "@/lib/trainer-availability"
+import type { TrainerWorkload } from "@/lib/trainer-workload"
 
 export type TrainerType = "STAFF" | "CONTRACTOR"
 export type TrainerShift = "MORNING" | "EVENING" | "NIGHT" | "FLEXIBLE"
@@ -98,6 +99,9 @@ export type TrainerSummary = {
   certifications: string[]
   specializations: { id: string; name: string }[]
   packageCount: number
+  memberCount: number
+  unallocatedMemberCount: number
+  workload: TrainerWorkload
 }
 
 export type GetTrainersResponse = {
@@ -105,7 +109,7 @@ export type GetTrainersResponse = {
 }
 
 export async function getTrainers(): Promise<GetTrainersResponse> {
-  const response = await fetch("/api/trainer", { method: "GET" })
+  const response = await fetch("/api/trainer", { method: "GET", cache: "no-store" })
 
   return parseResponse<GetTrainersResponse>(response)
 }

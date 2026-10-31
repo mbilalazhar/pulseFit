@@ -6,7 +6,6 @@ import { prisma } from "@/lib/prisma"
 import { getSession } from "@/lib/auth"
 import { ProfileHeader } from "./profile-header"
 import { AboutPanels } from "./about-panels"
-import { MetricsStrip } from "./metrics-strip"
 import { TrainerScheduling } from "./trainer-scheduling"
 import { dateInTimeZone } from "@/lib/member-status"
 import { mondayOf } from "@/lib/trainer-scheduling"
@@ -64,7 +63,6 @@ export default async function TrainerDetailPage(
 
       <ProfileHeader trainer={trainer} />
       <AboutPanels trainer={trainer} />
-      <MetricsStrip trainer={trainer} />
 
       {trainer.availability.length > 0 && (
         <section className="space-y-3 rounded-2xl border bg-card p-5">
@@ -86,7 +84,7 @@ export default async function TrainerDetailPage(
         </section>
       )}
 
-      <TrainerScheduling key={trainer.id} trainerId={trainer.id} trainerName={trainer.fullName} initialWeek={mondayOf(dateInTimeZone(record.gym.timeZone))}>
+      <TrainerScheduling key={trainer.id} trainerId={trainer.id} trainerName={trainer.fullName} trainerMetrics={{ trainerType: trainer.trainerType, monthlySalary: trainer.monthlySalary, workDaysPerWeek: trainer.workDaysPerWeek }} initialWeek={mondayOf(dateInTimeZone(record.gym.timeZone))}>
         <PackagesTable trainer={trainer} />
       </TrainerScheduling>
     </div>

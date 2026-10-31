@@ -1,27 +1,27 @@
 "use client"
-
 import { useState, useMemo } from "react"
 import Link from "next/link"
 import { useQuery } from "@tanstack/react-query"
-import { ChevronLeft, ChevronRight, ArrowRight, Loader2Icon, OctagonAlert } from "lucide-react"
+import { ChevronLeft, ChevronRight, ArrowRight, ArrowUp, Loader2Icon, OctagonAlert } from "lucide-react"
 import { getTrainers } from "@/lib/services/trainer.services"
 import {
   ITEMS_PER_PAGE,
   TABS,
   matchesTab,
   pageCount,
-  schedule,
   showsPagination,
   type TabValue,
 } from "./trainers-table-logic"
 import { STATUS_BADGE, STATUS_LABEL } from "./trainer-status"
 import { TrainerAvatar } from "./trainer-avatar"
+import { WorkloadRing } from "./workload-ring"
+import { prioritizeTrainers } from "@/lib/trainer-allocation-priority"
 import { cn } from "@/lib/utils"
 
 /* Header labels and rows share one track definition so columns stay aligned
    without a <table> — rows need to be links, which a <tr> cannot be. */
 const ROW_GRID =
-  "grid items-center gap-4 grid-cols-[minmax(200px,2.4fr)_minmax(130px,1.1fr)_minmax(100px,0.9fr)_minmax(70px,0.5fr)_minmax(80px,0.5fr)_minmax(130px,1fr)_minmax(80px,0.5fr)_28px]"
+  "grid items-center gap-4 grid-cols-[minmax(200px,2.4fr)_minmax(130px,1.1fr)_minmax(100px,0.9fr)_minmax(70px,0.5fr)_minmax(135px,1fr)_minmax(95px,0.7fr)_minmax(130px,1fr)_minmax(140px,1fr)_minmax(80px,0.5fr)_28px]"
 
 export function TrainersTable() {
   const [activeTab, setActiveTab] = useState<TabValue>("All")
@@ -35,7 +35,7 @@ export function TrainersTable() {
   const trainers = useMemo(() => data?.trainers ?? [], [data])
 
   const filteredTrainers = useMemo(
-    () => trainers.filter((t) => matchesTab(t, activeTab)),
+    () => prioritizeTrainers(trainers.filter((t) => matchesTab(t, activeTab))),
     [trainers, activeTab],
   )
 
@@ -49,6 +49,8 @@ export function TrainersTable() {
   )
 
   const showPagination = showsPagination(filteredTrainers.length)
+  const awaitingMembers = filteredTrainers.reduce((count, trainer) => count + trainer.unallocatedMemberCount, 0)
+  const awaitingTrainers = filteredTrainers.filter((trainer) => trainer.unallocatedMemberCount > 0).length
 
   const handleTabChange = (tab: TabValue) => {
     setActiveTab(tab)
@@ -95,8 +97,13 @@ export function TrainersTable() {
         ))}
       </div>
 
+      <p className="px-4 text-xs text-muted-foreground">Current week · Total work hours are configured availability; actual working hours are assigned session hours.</p>
+      {awaitingMembers > 0 && <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-yellow-500/20 bg-yellow-500/5 px-4 py-3 text-xs">
+        <span className="font-medium">{awaitingMembers} {awaitingMembers === 1 ? "member" : "members"} awaiting sessions across {awaitingTrainers} {awaitingTrainers === 1 ? "trainer" : "trainers"}</span>
+        <span className="text-muted-foreground">Priority: most unallocated members first</span>
+      </div>}
       <div className="overflow-x-auto">
-        <div className="min-w-[1060px]">
+        <div className="min-w-[1380px]">
           {/* Column labels */}
           <div
             className={cn(
@@ -108,8 +115,10 @@ export function TrainersTable() {
             <span>Contact Number</span>
             <span>Status</span>
             <span>Members</span>
-            <span>Workload</span>
-            <span>Work Hours</span>
+            <span className="inline-flex items-center gap-1" title="Priority: most unallocated members first">Unallocated Members <ArrowUp className="h-5 w-4 shrink-0 text-red-600 dark:text-red-400" preserveAspectRatio="none" aria-hidden="true" /></span>
+            <span className="text-center">Workload</span>
+            <span>Total Work Hours</span>
+            <span>Actual Working Hours</span>
             <span>Packages</span>
             <span />
           </div>
@@ -118,7 +127,6 @@ export function TrainersTable() {
           {paginatedTrainers.length > 0 ? (
             <div className="space-y-1">
               {paginatedTrainers.map((trainer) => {
-                const hours = schedule(trainer)
                 return (
                   <Link
                     key={trainer.id}
@@ -126,6 +134,7 @@ export function TrainersTable() {
                     className={cn(
                       ROW_GRID,
                       "group relative px-4 py-4 text-[13px]",
+                      trainer.unallocatedMemberCount > 0 && "bg-yellow-500/5",
                       "border-b border-border transition-colors duration-200 ease-out hover:z-10 hover:translate-y-0.75 hover:bg-muted hover:shadow-[0_5px_18px_var(--color-member-row-shadow)]",
                     )}
                   >
@@ -147,6 +156,7 @@ export function TrainersTable() {
                           ) : null}
                         </div>
                         <p className="mt-0.5 truncate text-xs text-muted-foreground">{trainer.email}</p>
+                        {trainer.unallocatedMemberCount > 0 && <span className="mt-1 inline-flex rounded-full bg-yellow-500/15 px-2 py-0.5 text-[10px] font-semibold text-yellow-800 dark:text-yellow-300">Priority · sessions needed</span>}
                       </div>
                     </div>
 
@@ -165,19 +175,17 @@ export function TrainersTable() {
                       </span>
                     </span>
 
-                    {/* Members — no trainer/member relation exists yet. */}
-                    <span className="font-medium text-foreground">0</span>
+                    <span className="font-medium text-foreground">{trainer.memberCount}</span>
 
-                    {/* Workload — derived from members, so also unavailable. */}
-                    <span className="text-muted-foreground">—</span>
-
-                    {/* Work Hours */}
                     <span>
-                      <span className="block text-foreground">{hours.primary}</span>
-                      <span className="mt-0.5 block text-xs text-muted-foreground">
-                        {hours.secondary}
-                      </span>
+                      <span className={cn("inline-flex min-w-7 items-center justify-center rounded-full px-2 py-1 font-semibold", trainer.unallocatedMemberCount > 0 ? "bg-yellow-500/15 text-yellow-800 dark:text-yellow-300" : "text-muted-foreground")}>{trainer.unallocatedMemberCount}</span>
+                      {trainer.unallocatedMemberCount > 0 && <span className="mt-1 block text-[11px] text-muted-foreground">Awaiting sessions</span>}
                     </span>
+
+                    <WorkloadRing percent={trainer.workload.workloadPercent} />
+
+                    <span className="text-foreground">{trainer.workload.totalWorkHours}h / week</span>
+                    <span className="text-foreground">{trainer.workload.actualWorkHours}h / week</span>
                     {/* Packages */}
                     <span className="font-medium text-foreground">{trainer.packageCount}</span>
 
