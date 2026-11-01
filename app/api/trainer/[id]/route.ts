@@ -3,7 +3,8 @@ import { getSession } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { updateTrainerSchema } from "@/lib/validators/trainer"
 import { weeklyWorkHours } from "@/lib/trainer-availability"
-import { bookingFitsWorkingHours, sameWorkingHours } from "@/lib/trainer-update"
+import { sameWorkingHours } from "@/lib/trainer-update"
+import { reassignTrainerSchedule, ScheduleChangeError } from "@/lib/trainer-schedule-change-server"
 
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -23,13 +24,12 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       if (!existing) return { error: "Trainer not found", status: 404 } as const
       const changedHours = !sameWorkingHours(existing.availability, hours)
       if (changedHours) {
-        const bookings = await tx.trainingSession.findMany({
-          where: { gymId: session.gymId, trainerId: id, status: "SCHEDULED", endsAt: { gt: new Date() } },
-          select: { startsAt: true, endsAt: true },
+        await reassignTrainerSchedule(tx, {
+          gymId: session.gymId, trainer: existing, hours,
+          timeZone: existing.gym.timeZone, confirmation: data.scheduleConfirmation,
         })
-        if (bookings.some((booking) => !bookingFitsWorkingHours(booking, hours, existing.gym.timeZone))) {
-          return { error: "These working hours would exclude an upcoming member session. Keep hours that cover existing bookings.", status: 409 } as const
-        }
+      } else if (data.scheduleConfirmation) {
+        throw new ScheduleChangeError("The trainer's working hours changed while reviewing. Close the review and reload the edit form.")
       }
       const compensation = data.trainerType === "STAFF" ? {
         monthlySalaryMinor: Math.round(data.monthlySalary * 100),
@@ -64,6 +64,9 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     if ("error" in result) return NextResponse.json({ message: result.error }, { status: result.status })
     return NextResponse.json({ message: "Trainer updated", trainer: result.trainer })
   } catch (error) {
+    if (error instanceof ScheduleChangeError) return NextResponse.json({
+      message: error.message, ...(error.review ? { code: "SCHEDULE_REVIEW_REQUIRED", review: error.review } : {}),
+    }, { status: 409 })
     if (error && typeof error === "object" && "code" in error) {
       if (error.code === "P2002") return NextResponse.json({ message: "A trainer with this email already exists in your gym." }, { status: 409 })
       if (error.code === "P2025") return NextResponse.json({ message: "Trainer not found" }, { status: 404 })

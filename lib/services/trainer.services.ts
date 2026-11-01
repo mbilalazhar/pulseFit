@@ -1,5 +1,6 @@
 import type { TrainerAvailability } from "@/lib/trainer-availability"
 import type { TrainerWorkload } from "@/lib/trainer-workload"
+import type { ScheduleChangeReview, ScheduleConfirmation } from "@/lib/trainer-schedule-change"
 
 export type TrainerType = "STAFF" | "CONTRACTOR"
 export type TrainerShift = "MORNING" | "EVENING" | "NIGHT" | "FLEXIBLE"
@@ -43,10 +44,18 @@ export type CreateTrainerResponse = {
   }
 }
 
+export class ScheduleReviewRequiredError extends Error {
+  review: ScheduleChangeReview
+  constructor(message: string, review: ScheduleChangeReview) { super(message); this.review = review }
+}
+
+export type UpdateTrainerPayload = CreateTrainerPayload & { scheduleConfirmation?: ScheduleConfirmation }
+
 async function parseResponse<T>(response: Response): Promise<T> {
   const data = await response.json().catch(() => null)
 
   if (!response.ok) {
+    if (data?.code === "SCHEDULE_REVIEW_REQUIRED" && data.review) throw new ScheduleReviewRequiredError(data.message, data.review)
     const fields = data?.error && typeof data.error === "object"
       ? Object.values(data.error).flat().filter((value): value is string => typeof value === "string")
       : []
@@ -70,7 +79,7 @@ export async function createTrainer(
 
 /* ---------- reading trainers ---------- */
 
-export async function updateTrainer(id: string, payload: CreateTrainerPayload): Promise<CreateTrainerResponse> {
+export async function updateTrainer(id: string, payload: UpdateTrainerPayload): Promise<CreateTrainerResponse> {
   const response = await fetch(`/api/trainer/${encodeURIComponent(id)}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },

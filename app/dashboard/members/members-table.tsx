@@ -220,16 +220,13 @@ export function MembersTable({ members, plans }: { members: MemberSummary[]; pla
                       <Eye className="size-4" />
                     </Link>
 
-                    <Button
-                      type="button"
-                      size="icon-sm"
-                      variant="ghost"
+                    <Link
+                      href={`/dashboard/members/${member.id}/edit`}
                       aria-label={`Edit ${member.name}`}
-                      disabled
-                      className="text-muted-foreground disabled:opacity-40"
+                      className={cn(buttonVariants({ size: "icon-sm", variant: "ghost" }), "text-muted-foreground hover:text-foreground")}
                     >
                       <Pencil className="size-4" />
-                    </Button>
+                    </Link>
                   </div>
                 </td>
               </tr>
@@ -245,7 +242,6 @@ export function MembersTable({ members, plans }: { members: MemberSummary[]; pla
           </tbody>
         </table>
       </div>
-      <p aria-live="polite" className="px-1 text-xs text-muted-foreground">Showing {filtered.length} of {members.length} members</p>
 
     </section>
   )

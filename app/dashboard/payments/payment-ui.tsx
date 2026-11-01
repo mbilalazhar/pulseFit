@@ -37,6 +37,6 @@ export function StatusBadge({ status }: { status: string }) {
     "bg-rose-100 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400": status === "Overdue",
     "bg-amber-50 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400": status === "Due Today" || status === "Pending",
     "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400": status === "Paid",
-    "bg-muted text-muted-foreground": status === "Upcoming",
+    "bg-muted text-muted-foreground": status === "Upcoming" || status === "No due date",
   })}>{status}</span>
 }

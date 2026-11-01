@@ -26,6 +26,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { PlanIcon } from "@/components/plan-icon"
 import { cn } from "@/lib/utils"
 import {
   updatePlanStatus,
@@ -112,7 +113,7 @@ export function PlanCard({ plan }: { plan: PlanSummary }) {
     <div className="relative flex flex-col rounded-2xl border bg-card p-5">
       {/* Title + status */}
       <div className="flex items-start justify-between gap-2">
-        <h3 className="font-heading text-lg font-bold tracking-tight">{plan.name}</h3>
+        <div className="flex min-w-0 items-center gap-3"><PlanIcon icon={plan.icon} color={plan.color} /><div className="min-w-0"><h3 className="break-words font-heading text-lg font-bold tracking-tight">{plan.name}</h3><p className="text-xs text-muted-foreground">{plan.category ?? "Basic"}</p></div></div>
         <span
           className={cn(
             "shrink-0 rounded-full px-2.5 py-1 text-xs font-medium",

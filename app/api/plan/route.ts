@@ -33,6 +33,7 @@ export async function GET() {
     const shaped = plans.map((plan) => ({
       id: plan.id,
       name: plan.name,
+      icon: plan.icon, color: plan.color, category: plan.category,
       shortDesc: plan.shortDesc,
       longDesc: plan.longDesc,
       basePriceMinor: plan.basePriceMinor,

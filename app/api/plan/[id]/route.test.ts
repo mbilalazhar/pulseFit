@@ -120,6 +120,7 @@ test("updates the selected plan and replaces features and durations in one neste
   assert.deepEqual(saved.where, { id: "plan-1", gymId: "gym-1", status: { in: ["DRAFT", "INACTIVE"] } })
   assert.deepEqual(saved.data, {
     ...input,
+    icon: "dumbbell", color: "blue", category: "Basic",
     features: { deleteMany: {}, create: input.features },
     durations: { deleteMany: {}, create: input.durations },
   })
@@ -175,4 +176,14 @@ test("reports a conflict for duplicate names or plans activated/deleted during e
     updateError = { code }
     assert.equal((await put()).status, 409)
   }
+})
+
+test("updates appearance on editable plans and keeps the active-plan edit restriction", async () => {
+  const appearance = { icon: "crown", color: "gold", category: "Luxury" }
+  assert.equal((await put({ ...input, ...appearance })).status, 200)
+  const saved = update.mock.calls[0].arguments[0].data
+  for (const [key, value] of Object.entries(appearance)) assert.equal(saved[key], value)
+  existing = { ...input, ...appearance, status: "ACTIVE" }
+  assert.equal((await put({ ...input, icon: "heart" })).status, 409)
+  assert.equal(update.mock.callCount(), 1)
 })

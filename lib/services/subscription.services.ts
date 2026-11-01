@@ -2,6 +2,9 @@ export type PlanStatus = "DRAFT" | "ACTIVE" | "INACTIVE"
 
 export type CreatePlanPayload = {
   name: string
+  icon?: string
+  color?: string
+  category?: string
   shortDesc: string
   longDesc?: string
   basePriceMinor: number
@@ -68,6 +71,9 @@ export async function updatePlan(id: string, payload: CreatePlanPayload): Promis
 export type PlanSummary = {
   id: string
   name: string
+  icon?: string
+  color?: string
+  category?: string
   shortDesc: string
   longDesc: string | null
   basePriceMinor: number

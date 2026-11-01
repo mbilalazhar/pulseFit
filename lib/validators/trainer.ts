@@ -1,6 +1,7 @@
 // lib/validators/trainer.ts
 import { z } from "zod";
 import { contractorSessionsSchema, trainerAvailabilitySchema } from "@/lib/trainer-availability";
+import { scheduleConfirmationSchema } from "@/lib/trainer-schedule-change";
 
 export const MAX_SPECIALIZATIONS = 3;
 
@@ -46,4 +47,6 @@ export const createTrainerSchema = z.discriminatedUnion("trainerType", [
 export type CreateTrainerInput = z.infer<typeof createTrainerSchema>;
 
 // Editing uses the same complete form and validation as creation.
-export const updateTrainerSchema = createTrainerSchema;
+export const updateTrainerSchema = createTrainerSchema.and(z.object({
+  scheduleConfirmation: scheduleConfirmationSchema.optional(),
+}));
