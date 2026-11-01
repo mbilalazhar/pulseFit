@@ -5,6 +5,7 @@ model Attendance {
   attendanceDate DateTime @db.Date
   checkInAt      DateTime @default(now())
   checkOutAt     DateTime?
+  overdueAcknowledgedAt DateTime?
   durationMinutes Int?                      // [NEW] set on check-out; drives heatmap intensity
   note            String?                   // [NEW] "session notes"
 

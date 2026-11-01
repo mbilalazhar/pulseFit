@@ -16,6 +16,7 @@ import { createMember } from "@/lib/services/member.services"
 import { cn } from "@/lib/utils"
 import { hasTrainerGuidance } from "@/lib/plan-features"
 import { requiresAdditionalTrainingCharge } from "@/lib/training-charges"
+import { TrainerSelect } from "./trainer-select"
 import { membershipAmounts, membershipExpiry } from "./member-form-calculations"
 
 const controlClassName = "h-11 w-full min-w-0 rounded-sm border border-input bg-card px-3.5 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-ring focus:ring-3 focus:ring-ring/20 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:bg-muted disabled:text-foreground/80 disabled:opacity-100 read-only:bg-muted"
@@ -62,7 +63,10 @@ function SummaryRow({ label, children, strong = false }: { label: string; childr
 
 export function AddMemberForm() {
   const plansQuery = useQuery({ queryKey: ["plans"], queryFn: getPlans })
-  const trainersQuery = useQuery({ queryKey: ["trainers"], queryFn: getTrainers })
+  const trainersQuery = useQuery({
+    queryKey: ["trainers"], queryFn: getTrainers,
+    refetchOnMount: "always", refetchOnWindowFocus: true, refetchInterval: 60_000,
+  })
   const queryClient = useQueryClient()
   const formRef = useRef<HTMLFormElement>(null)
   const [fullName, setFullName] = useState("")
@@ -71,6 +75,7 @@ export function AddMemberForm() {
   const [durationMonths, setDurationMonths] = useState(1)
   const [startDate, setStartDate] = useState(today)
   const [trainerRequired, setTrainerRequired] = useState(false)
+  const [trainerId, setTrainerId] = useState("")
   const [sessionOverrides, setSessionOverrides] = useState<{ sessionsPerWeek?: string; sessionDurationMinutes?: string }>({})
   const [additionalCharge, setAdditionalCharge] = useState("")
   const [specialDiscount, setSpecialDiscount] = useState("")
@@ -80,6 +85,7 @@ export function AddMemberForm() {
   const selected = plans.find((plan) => plan.id === planId)
   const guidanceIncluded = hasTrainerGuidance(selected?.features ?? [])
   const needsTrainer = guidanceIncluded || trainerRequired
+  const selectedTrainer = needsTrainer ? trainers.find((trainer) => trainer.id === trainerId) : undefined
   const sessionsPerWeek = sessionOverrides.sessionsPerWeek ?? (guidanceIncluded ? selected?.sessionsPerWeek?.toString() ?? "" : "")
   const sessionDurationMinutes = sessionOverrides.sessionDurationMinutes ?? (guidanceIncluded ? selected?.sessionDurationMinutes?.toString() ?? "" : "")
   const chargeRequired = !!selected && needsTrainer && requiresAdditionalTrainingCharge(guidanceIncluded, selected, {
@@ -135,6 +141,7 @@ export function AddMemberForm() {
     setDurationMonths(1)
     setStartDate(today())
     setTrainerRequired(false)
+    setTrainerId("")
     setSessionOverrides({})
     setAdditionalCharge("")
     setSpecialDiscount("")
@@ -178,7 +185,7 @@ export function AddMemberForm() {
                 plansQuery.isError ? <span role="alert">Couldn&apos;t load plans. <button type="button" onClick={() => void plansQuery.refetch()} className="font-semibold text-foreground underline">Try again</button></span>
                   : !plansQuery.isPending && plans.length === 0 ? <span>No active plans available. <Link href="/dashboard/plans" className="font-semibold text-foreground underline">Manage plans</Link></span> : undefined
               }>
-                <select id="member-plan" name="planId" value={planId} onChange={(event) => { setPlanId(event.target.value); setSessionOverrides({}); setTrainerRequired(false); setAdditionalCharge(""); setSpecialDiscount(""); setReceived("") }} required disabled={plansQuery.isPending || plansQuery.isError || plans.length === 0} aria-describedby={plansQuery.isError || plans.length === 0 ? "member-plan-help" : undefined} className={controlClassName}>
+                <select id="member-plan" name="planId" value={planId} onChange={(event) => { setPlanId(event.target.value); setSessionOverrides({}); setTrainerRequired(false); setTrainerId(""); setAdditionalCharge(""); setSpecialDiscount(""); setReceived("") }} required disabled={plansQuery.isPending || plansQuery.isError || plans.length === 0} aria-describedby={plansQuery.isError || plans.length === 0 ? "member-plan-help" : undefined} className={controlClassName}>
                   <option value="" disabled>{plansQuery.isPending ? "Loading plans…" : "Select a plan"}</option>
                   {plans.map((plan) => <option key={plan.id} value={plan.id}>{plan.name}</option>)}
                 </select>
@@ -195,19 +202,23 @@ export function AddMemberForm() {
                 <legend className="text-sm font-medium">Trainer Required?</legend>
                 <div className="flex h-11 items-center gap-4">
                   {[true, false].map((value) => <label key={String(value)} className="flex cursor-pointer items-center gap-2.5">
-                    <input type="radio" name="trainerRequired" value={String(value)} checked={trainerRequired === value} onChange={() => { setTrainerRequired(value); setSessionOverrides({}); setAdditionalCharge("") }} className="size-4 cursor-pointer accent-black focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black" />
+                    <input type="radio" name="trainerRequired" value={String(value)} checked={trainerRequired === value} onChange={() => { setTrainerRequired(value); setTrainerId(""); setSessionOverrides({}); setAdditionalCharge("") }} className="size-4 cursor-pointer accent-black focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black" />
                     <span className="text-sm font-medium">{value ? "Yes" : "No"}</span>
                   </label>)}
                 </div>
               </fieldset>}
               <Field id="member-trainer" label="Assigned Trainer" required={needsTrainer} help={needsTrainer ? (
                 trainersQuery.isError ? <span role="alert">Couldn&apos;t load trainers. <button type="button" onClick={() => void trainersQuery.refetch()} className="font-semibold text-foreground underline">Try again</button></span>
-                  : !trainersQuery.isPending && trainers.length === 0 ? (guidanceIncluded ? "This plan includes trainer guidance. Add an active trainer before enrolling a member." : "No active trainers available. Select No or add an active trainer.") : undefined
+                  : !trainersQuery.isPending && trainers.length === 0 ? (guidanceIncluded ? "This plan includes trainer guidance. Add an active trainer before enrolling a member." : "No active trainers available. Select No or add an active trainer.") : "Workload shows assigned session hours against available working hours for the current week."
               ) : undefined}>
-                <select key={`${planId}-${needsTrainer}`} id="member-trainer" name="trainerId" defaultValue="" required={needsTrainer} disabled={!needsTrainer || trainersQuery.isPending || trainersQuery.isError || trainers.length === 0} aria-describedby={needsTrainer && (trainersQuery.isError || trainers.length === 0) ? "member-trainer-help" : undefined} className={controlClassName}>
-                  <option value="" disabled={needsTrainer}>{!needsTrainer ? "No trainer assigned" : trainersQuery.isPending ? "Loading trainers…" : "Select a trainer"}</option>
-                  {trainers.map((trainer) => <option key={trainer.id} value={trainer.id}>{trainer.fullName}{trainer.specializations.length ? ` (${trainer.specializations.map((item) => item.name).join(", ")})` : ""}</option>)}
-                </select>
+                <TrainerSelect
+                  trainers={trainers}
+                  value={selectedTrainer?.id ?? ""}
+                  onValueChange={setTrainerId}
+                  required={needsTrainer}
+                  disabled={!needsTrainer || trainersQuery.isPending || trainersQuery.isError || trainers.length === 0 || mutation.isPending || mutation.isSuccess}
+                  placeholder={!needsTrainer ? "No trainer assigned" : trainersQuery.isPending ? "Loading trainers…" : "Select a trainer"}
+                />
               </Field>
               {needsTrainer && <>
                 <Field id="member-weekly-sessions" label="Sessions per Week" required help={guidanceIncluded ? "Starts with the plan allowance. You can change it for this member." : "Enter how many trainer sessions this member will receive each week."}>

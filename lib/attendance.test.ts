@@ -1,10 +1,32 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { buildAttendance, eligibleForAttendance, type AttendanceMember, type AttendanceRecord } from "./attendance"
+import { ATTENDANCE_LIMIT_MS, ATTENDANCE_WARNING_MS, buildAttendance, eligibleForAttendance, needsAttendanceWarning, type AttendanceMember, type AttendanceRecord } from "./attendance"
 
 const now = new Date("2026-10-17T20:00:00Z")
 const member = (id: string, overrides: Partial<AttendanceMember> = {}): AttendanceMember => ({ id, name: id, email: null, phone: "1234567", status: "ACTIVE", startDate: new Date("2026-10-01"), createdAt: new Date("2026-10-01"), plan: { name: "Gym plan" }, ...overrides })
 const visit = (id: string, memberId: string, date: string, closed = false): AttendanceRecord => ({ id, memberId, attendanceDate: new Date(date), checkInAt: new Date(`${date}T00:00:00Z`), checkOutAt: closed ? new Date(`${date}T01:00:00Z`) : null })
+
+test("warnings start strictly after three hours and stop at six hours or after dismissal/exit", () => {
+  const record = visit("1", "one", "2026-10-17")
+  const at = (milliseconds: number) => new Date(record.checkInAt.getTime() + milliseconds)
+  assert.equal(needsAttendanceWarning(record, at(ATTENDANCE_WARNING_MS)), false)
+  assert.equal(needsAttendanceWarning(record, at(ATTENDANCE_WARNING_MS + 1)), true)
+  assert.equal(needsAttendanceWarning(record, at(ATTENDANCE_LIMIT_MS - 1)), true)
+  assert.equal(needsAttendanceWarning(record, at(ATTENDANCE_LIMIT_MS)), false)
+  assert.equal(needsAttendanceWarning({ ...record, overdueAcknowledgedAt: at(ATTENDANCE_WARNING_MS + 1) }, at(ATTENDANCE_WARNING_MS + 2)), false)
+  assert.equal(needsAttendanceWarning({ ...record, checkOutAt: at(ATTENDANCE_WARNING_MS + 1) }, at(ATTENDANCE_WARNING_MS + 2)), false)
+})
+
+test("live overdue warnings include overnight members even while browsing an older date", () => {
+  const record = { ...visit("1", "one", "2026-10-17"), checkInAt: new Date("2026-10-17T16:00:00Z") }
+  const data = buildAttendance([member("one")], [record], "Asia/Karachi", "2026-10-16", now)
+  assert.equal(data.overdue.length, 1)
+  assert.equal(data.overdue[0].automaticExitAt, "2026-10-17T22:00:00.000Z")
+  assert.equal(data.overdue[0].attendanceId, "1")
+  const dismissed = buildAttendance([member("one")], [{ ...record, overdueAcknowledgedAt: now }], "Asia/Karachi", undefined, now)
+  assert.deepEqual(dismissed.overdue, [])
+  assert.equal(dismissed.rows[0].status, "Present")
+})
 
 test("counts present, checked out and absent members from actual records", () => {
   const result = buildAttendance([member("one"), member("two"), member("three")], [visit("1", "one", "2026-10-18"), visit("2", "two", "2026-10-18", true)], "Asia/Karachi", undefined, now)

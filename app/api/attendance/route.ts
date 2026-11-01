@@ -3,7 +3,8 @@ import { z } from "zod"
 import { getSession } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { dateInTimeZone } from "@/lib/member-status"
-import { buildAttendance, eligibleForAttendance } from "@/lib/attendance"
+import { ATTENDANCE_LIMIT_MS, ATTENDANCE_WARNING_MS, buildAttendance, eligibleForAttendance } from "@/lib/attendance"
+import { closeOverdueAttendance } from "@/lib/attendance-server"
 
 export async function GET(req: Request) {
   try {
@@ -14,15 +15,17 @@ export async function GET(req: Request) {
     const gym = await prisma.gym.findUnique({ where: { id: session.gymId }, select: { timeZone: true } })
     if (!gym) return NextResponse.json({ message: "Gym not found" }, { status: 404 })
     if (date && date > dateInTimeZone(gym.timeZone)) return NextResponse.json({ message: "Attendance dates cannot be in the future" }, { status: 400 })
+    const now = new Date()
+    await closeOverdueAttendance(session.gymId, now)
     const [memberRecords, records] = await Promise.all([
       prisma.member.findMany({ where: { gymId: session.gymId, deletedAt: null }, select: { id: true, name: true, email: true, phone: true, status: true, createdAt: true, subscriptions: { where: { status: { not: "CANCELLED" } }, orderBy: [{ createdAt: "desc" }, { id: "desc" }], select: { status: true, startDate: true, plan: { select: { name: true } } } } } }),
-      prisma.attendance.findMany({ where: { gymId: session.gymId }, select: { id: true, memberId: true, attendanceDate: true, checkInAt: true, checkOutAt: true } }),
+      prisma.attendance.findMany({ where: { gymId: session.gymId }, select: { id: true, memberId: true, attendanceDate: true, checkInAt: true, checkOutAt: true, overdueAcknowledgedAt: true } }),
     ])
     const members = memberRecords.map((member) => {
       const subscription = member.subscriptions.find((item) => item.status === "ACTIVE") ?? member.subscriptions[0]
       return { ...member, startDate: subscription?.startDate ?? null, plan: subscription?.plan ?? null }
     })
-    return NextResponse.json(buildAttendance(members, records, gym.timeZone, date), { headers: { "Cache-Control": "private, no-store" } })
+    return NextResponse.json(buildAttendance(members, records, gym.timeZone, date, now), { headers: { "Cache-Control": "private, no-store" } })
   } catch (error) {
     console.error("Fetch attendance error:", error)
     return NextResponse.json({ message: "Could not load attendance" }, { status: 500 })
@@ -32,6 +35,7 @@ export async function GET(req: Request) {
 const actionSchema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("present"), memberId: z.string().min(1) }),
   z.object({ action: z.literal("left"), attendanceId: z.string().min(1) }),
+  z.object({ action: z.literal("leave"), attendanceId: z.string().min(1) }),
 ])
 
 export async function POST(req: Request) {
@@ -42,8 +46,21 @@ export async function POST(req: Request) {
     if (!parsed.success) return NextResponse.json({ message: "Invalid attendance details" }, { status: 400 })
     const action = parsed.data
     const now = new Date()
+    await closeOverdueAttendance(session.gymId, now)
+    if (action.action === "leave") {
+      const result = await prisma.attendance.updateMany({
+        where: { id: action.attendanceId, gymId: session.gymId, checkOutAt: null, checkInAt: { lt: new Date(now.getTime() - ATTENDANCE_WARNING_MS), gt: new Date(now.getTime() - ATTENDANCE_LIMIT_MS) } },
+        data: { overdueAcknowledgedAt: now },
+      })
+      if (!result.count) return NextResponse.json({ message: "This visit no longer needs a warning. Attendance has been refreshed." }, { status: 409 })
+      return NextResponse.json({ message: "Member left inside. They will be marked as exited at 6 hours after check-in." })
+    }
     if (action.action === "left") {
-      const result = await prisma.attendance.updateMany({ where: { id: action.attendanceId, gymId: session.gymId, checkOutAt: null }, data: { checkOutAt: now } })
+      const visit = await prisma.attendance.findFirst({ where: { id: action.attendanceId, gymId: session.gymId, checkOutAt: null }, select: { checkInAt: true } })
+      if (!visit) return NextResponse.json({ message: "This visit is already checked out or unavailable" }, { status: 409 })
+      const checkOutAt = new Date(Math.min(now.getTime(), visit.checkInAt.getTime() + ATTENDANCE_LIMIT_MS))
+      const durationMinutes = Math.max(0, Math.floor((checkOutAt.getTime() - visit.checkInAt.getTime()) / 60_000))
+      const result = await prisma.attendance.updateMany({ where: { id: action.attendanceId, gymId: session.gymId, checkOutAt: null }, data: { checkOutAt, durationMinutes } })
       if (!result.count) return NextResponse.json({ message: "This visit is already checked out or unavailable" }, { status: 409 })
       return NextResponse.json({ message: "Member marked as left" })
     }

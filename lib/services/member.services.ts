@@ -43,3 +43,12 @@ export async function createMember(payload: CreateMemberInput): Promise<CreateMe
   }
   return data as CreateMemberResponse
 }
+
+export async function updateMember(id: string, input: import("@/lib/member-edit").MemberEditInput): Promise<import("@/lib/member-edit").MemberEditResult> {
+  const response = await fetch(`/api/member/${encodeURIComponent(id)}`, {
+    method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input),
+  })
+  const data = await response.json().catch(() => null)
+  if (!response.ok) throw new Error(data?.message ?? "Could not update the member. Please try again.")
+  return data
+}

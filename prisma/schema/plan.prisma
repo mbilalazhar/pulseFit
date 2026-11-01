@@ -8,6 +8,9 @@ model Plan {
   id             String     @id @default(cuid())
   gymId          String
   name           String
+  icon           String     @default("dumbbell")
+  color          String     @default("blue")
+  category       String     @default("Basic")
   shortDesc      String
   longDesc       String?
   basePriceMinor Int

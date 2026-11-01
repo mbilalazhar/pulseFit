@@ -1,5 +1,13 @@
 import { dateInTimeZone } from "./member-status"
 
+export const ATTENDANCE_WARNING_MS = 3 * 60 * 60 * 1000
+export const ATTENDANCE_LIMIT_MS = 6 * 60 * 60 * 1000
+
+export function needsAttendanceWarning(record: Pick<AttendanceRecord, "checkInAt" | "checkOutAt" | "overdueAcknowledgedAt">, now: Date) {
+  const duration = now.getTime() - record.checkInAt.getTime()
+  return !record.checkOutAt && !record.overdueAcknowledgedAt && duration > ATTENDANCE_WARNING_MS && duration < ATTENDANCE_LIMIT_MS
+}
+
 export type AttendanceMember = {
   id: string; name: string; email: string | null; phone: string
   status: "ACTIVE" | "INACTIVE" | "FROZEN"; startDate: Date | null; createdAt: Date
@@ -7,6 +15,7 @@ export type AttendanceMember = {
 }
 export type AttendanceRecord = {
   id: string; memberId: string; attendanceDate: Date; checkInAt: Date; checkOutAt: Date | null
+  overdueAcknowledgedAt?: Date | null
 }
 export type AttendanceRow = {
   memberId: string; name: string; email: string | null; phone: string; plan: string | null
@@ -76,6 +85,11 @@ export function buildAttendance(members: AttendanceMember[], records: Attendance
   const openMap = new Map(records.filter((record) => !record.checkOutAt).map((record) => [record.memberId, record]))
   return {
     today, date, timeZone, rows, days, hours,
+    serverNow: now.toISOString(),
+    overdue: records.filter((record) => needsAttendanceWarning(record, now)).flatMap((record) => {
+      const member = memberMap.get(record.memberId)
+      return member ? [{ ...row(member, record), automaticExitAt: new Date(record.checkInAt.getTime() + ATTENDANCE_LIMIT_MS).toISOString() }] : []
+    }),
     summary: { present: selected.length, checkedOut: selected.filter((record) => record.checkOutAt).length, inside: rows.filter((row) => row.status === "Present").length, rate: days[29].rate },
     live: [...selected].sort((a, b) => b.checkInAt.getTime() - a.checkInAt.getTime()).slice(0, 5).flatMap((record) => {
       const member = memberMap.get(record.memberId)

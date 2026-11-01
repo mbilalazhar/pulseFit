@@ -81,6 +81,12 @@ export function LimitHint({ count, max }: { count: number; max: number }) {
 /* ---------- context ---------- */
 
 type PlanFormValue = {
+  icon: string
+  setIcon: (value: string) => void
+  color: string
+  setColor: (value: string) => void
+  category: string
+  setCategory: (value: string) => void
   planName: string
   setPlanName: (v: string) => void
   shortDesc: string
@@ -141,6 +147,9 @@ export function PlanFormProvider({ children, initialPlan }: { children: ReactNod
   const router = useRouter()
   const queryClient = useQueryClient()
 
+  const [icon, setIcon] = useState(initialPlan?.icon ?? "dumbbell")
+  const [color, setColor] = useState(initialPlan?.color ?? "blue")
+  const [category, setCategory] = useState(initialPlan?.category ?? "Basic")
   const [planName, setPlanName] = useState(initialPlan?.name ?? "")
   const [shortDesc, setShortDesc] = useState(initialPlan?.shortDesc ?? "")
   const [longDesc, setLongDesc] = useState(initialPlan?.longDesc ?? "")
@@ -211,7 +220,7 @@ export function PlanFormProvider({ children, initialPlan }: { children: ReactNod
   const handleSubmit = (asDraft: boolean) => {
     if (mutation.isPending) return
     const parsed = createPlanSchema.safeParse({
-      name: planName.trim(),
+      name: planName.trim(), icon, color, category,
       shortDesc: shortDesc.trim(),
       longDesc: longDesc.trim() || undefined,
       // API stores price in minor units (paisa/cents).
@@ -237,6 +246,7 @@ export function PlanFormProvider({ children, initialPlan }: { children: ReactNod
   }
 
   const value: PlanFormValue = {
+    icon, setIcon, color, setColor, category, setCategory,
     planName,
     setPlanName,
     shortDesc,

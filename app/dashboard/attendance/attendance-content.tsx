@@ -5,7 +5,7 @@ import { DatePicker } from "@/components/ui/date-time-picker"
 import { useState } from "react"
 import Image from "next/image"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { BarChart3, CalendarDays, Check, CircleCheck, Clock3, Flame, Lightbulb, Loader2, LogOut, Search, TrendingUp, Users } from "lucide-react"
+import { AlertTriangle, BarChart3, CalendarDays, Check, CircleCheck, Clock3, Flame, Lightbulb, Loader2, LogOut, Search, TrendingUp, Users } from "lucide-react"
 import defaultAvatar from "@/assets/User_Default.png"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -27,7 +27,7 @@ export function AttendanceContent() {
   const [search, setSearch] = useState("")
   const [tab, setTab] = useState<(typeof tabs)[number]>("Present")
   const [message, setMessage] = useState("")
-  const query = useQuery({ queryKey: ["attendance", date], queryFn: () => getAttendance(date || undefined), refetchInterval: 30_000, refetchOnWindowFocus: true })
+  const query = useQuery({ queryKey: ["attendance", date], queryFn: () => getAttendance(date || undefined), refetchInterval: 15_000, refetchOnWindowFocus: true })
   const mutation = useMutation({
     mutationFn: markAttendance,
     retry: false,
@@ -85,7 +85,7 @@ export function AttendanceContent() {
           <h2 className="flex items-center gap-2 text-sm font-bold"><Lightbulb className="size-4 text-rose-500" />Attendance Insights</h2>
           <div className="mt-5 space-y-5 text-xs leading-relaxed text-muted-foreground">
             <p className="flex gap-3"><Users className="mt-0.5 size-4 shrink-0" /><span><strong className="font-semibold text-foreground">{data.summary.inside} {data.summary.inside === 1 ? "member" : "members"}</strong> still need to be marked as left.</span></p>
-            <p className="flex gap-3"><LogOut className="mt-0.5 size-4 shrink-0" /><span>Check-out time is recorded when you confirm a member has left.</span></p>
+            <p className="flex gap-3"><LogOut className="mt-0.5 size-4 shrink-0" /><span>Visits over 3 hours need your attention. Members still inside are automatically marked as exited at 6 hours.</span></p>
             <p className="flex gap-3"><Flame className="mt-0.5 size-4 shrink-0" /><span>Attendance streaks count consecutive days with a check-in.</span></p>
             <p className="flex gap-3"><CalendarDays className="mt-0.5 size-4 shrink-0" /><span>Use the date selector to review earlier attendance.</span></p>
           </div>
@@ -116,6 +116,21 @@ export function AttendanceContent() {
           <div className="mb-1 flex items-center gap-2 sm:ml-auto"><DatePicker aria-label="Attendance date" min="1900-01-01" max={data.today} value={data.date} onValueChange={(value) => setDate(value || data.today)} className="h-9 rounded-lg border border-border bg-card px-3 text-xs outline-none focus:border-rose-400" /></div>
         </div>
         {query.isError ? <p role="alert" className="text-xs text-rose-600 dark:text-rose-400">Could not refresh attendance. <button type="button" onClick={() => void query.refetch()} className="underline">Try again</button></p> : null}
+        {data.overdue.length > 0 && <aside aria-labelledby="long-visit-warning" className="rounded-xl border border-amber-300/60 bg-amber-50 p-4 dark:border-amber-700/50 dark:bg-amber-950/30">
+          <div role="status" className="flex items-start gap-2.5">
+            <AlertTriangle aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-amber-600 dark:text-amber-400" />
+            <div><h3 id="long-visit-warning" className="text-sm font-semibold">Members inside for too long</h3><p className="mt-1 text-xs leading-relaxed text-muted-foreground">These members have been inside for more than 3 hours. Mark them as exited, or leave them as they are. Any visit still open will automatically end exactly 6 hours after check-in.</p></div>
+          </div>
+          <ul className="mt-3 divide-y divide-amber-300/40 dark:divide-amber-700/40">
+            {data.overdue.map((row) => <li key={row.attendanceId} className="flex flex-wrap items-center justify-between gap-3 py-3 last:pb-0">
+              <div><p className="text-sm font-semibold">{row.name}</p><p className="mt-1 text-xs text-muted-foreground">Inside for {elapsed(row.checkInAt, null, new Date(data.serverNow).getTime())} · Automatic exit at {time(row.automaticExitAt)}</p></div>
+              <div className="flex flex-wrap gap-2">
+                <Button type="button" disabled={mutation.isPending} onClick={() => markLeft(row)} aria-label={`Mark ${row.name} exit`} className="h-8 gap-1.5 px-3 text-xs"><LogOut className="size-3.5" />Mark exit</Button>
+                <Button type="button" variant="outline" disabled={mutation.isPending} onClick={() => { if (row.attendanceId) mutation.mutate({ action: "leave", attendanceId: row.attendanceId }) }} aria-label={`Leave ${row.name} as they are`} className="h-8 px-3 text-xs">Leave as they are</Button>
+              </div>
+            </li>)}
+          </ul>
+        </aside>}
         <div className="overflow-x-auto rounded-xl">
           <table className="w-full min-w-[900px] border-separate border-spacing-x-0 border-spacing-y-1 text-left">
             <caption className="sr-only">Member attendance on {data.date}</caption>
@@ -125,7 +140,7 @@ export function AttendanceContent() {
               <td className="px-4 py-4 text-xs"><span className="rounded-md bg-violet-50 dark:bg-violet-950/50 px-2 py-1 text-violet-600 dark:text-violet-400">{row.plan ?? "No plan"}</span></td>
               <td className="whitespace-nowrap px-4 py-4 text-xs text-foreground/80">{time(row.checkInAt)}</td>
               <td className="whitespace-nowrap px-4 py-4 text-xs text-foreground/80">{time(row.checkOutAt)}</td>
-              <td className="whitespace-nowrap px-4 py-4 text-xs text-foreground/80">{elapsed(row.checkInAt, row.checkOutAt, query.dataUpdatedAt)}</td>
+              <td className="whitespace-nowrap px-4 py-4 text-xs text-foreground/80">{elapsed(row.checkInAt, row.checkOutAt, new Date(data.serverNow).getTime())}</td>
               <td className="px-4 py-4"><span className={cn("whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium", badge[row.status])}>{row.status}</span></td>
               <td className="px-4 py-4"><span className="flex items-center gap-1.5 whitespace-nowrap text-xs"><Flame className={cn("size-3.5", row.streak ? "text-orange-500" : "text-muted-foreground")} />{row.streak} {row.streak === 1 ? "day" : "days"}</span></td>
               <td className="px-4 py-4">{row.status === "Present" ? <Button type="button" variant="outline" disabled={mutation.isPending} onClick={() => markLeft(row)} className="h-8 gap-1.5 whitespace-nowrap px-3 text-xs"><LogOut className="size-3.5" />Mark Left</Button> : <span className="text-xs text-muted-foreground">—</span>}</td>
@@ -134,7 +149,6 @@ export function AttendanceContent() {
             </tbody>
           </table>
         </div>
-        <p className="text-xs text-muted-foreground">Showing {rows.length} {tab.toLowerCase()} {rows.length === 1 ? "member" : "members"} · Times in {data.timeZone}</p>
       </section>
     </>
   )
