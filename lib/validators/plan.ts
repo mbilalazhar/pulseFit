@@ -1,5 +1,6 @@
 // lib/validators/plan.ts
 import { z } from "zod";
+import { PLAN_CATEGORIES, PLAN_ICON_IDS, PLAN_COLOR_IDS } from "../plan-appearance";
 
 import { PLAN_FEATURE_MAX, hasTrainerGuidance } from "../plan-features";
 import { trainerGuidanceSchema } from "./trainer-guidance";
@@ -7,6 +8,9 @@ export { PLAN_FEATURE_MAX, TRAINER_FEATURE_LABEL } from "../plan-features";
 
 export const createPlanSchema = z.object({
   name:           z.string().trim().max(100).default(""),
+  icon: z.enum(PLAN_ICON_IDS).default("dumbbell"),
+  color: z.enum(PLAN_COLOR_IDS).default("blue"),
+  category: z.enum(PLAN_CATEGORIES).default("Basic"),
   shortDesc:      z.string().trim().max(200).default(""),
   longDesc:       z.string().max(2000).optional(),
   basePriceMinor: z.number().int().min(0).max(2147483647).default(0),   // paisa, whole number

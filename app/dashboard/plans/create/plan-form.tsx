@@ -2,6 +2,7 @@ import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 import { DraftNotice } from "../plan-notice"
 import { PlanFormProvider } from "./plan-form-context"
+import { PlanAppearance } from "./plan-appearance"
 import { PlanInformation } from "./plan-information"
 import { PricingDurations } from "./pricing-durations"
 import { CustomPlanFeatures } from "./custom-plan-features"
@@ -51,6 +52,9 @@ export function PlanForm({ initialPlan }: { initialPlan?: PlanSummary }) {
             <FeatureSummary />
             <PlanStatus />
             <PlanActions />
+          </div>
+          <div className="lg:col-span-2">
+            <PlanAppearance />
           </div>
         </div>
       </PlanFormProvider>

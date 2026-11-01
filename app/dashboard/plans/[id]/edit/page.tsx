@@ -11,6 +11,7 @@ export default async function EditPlanPage({ params }: { params: Promise<{ id: s
   const plan = await prisma.plan.findFirst({
     where: { id, gymId: session.gymId },
     select: {
+      icon: true, color: true, category: true,
       id: true, name: true, shortDesc: true, longDesc: true,
       basePriceMinor: true, currency: true, maxHoursPerDay: true, status: true,
       sessionsPerWeek: true, sessionDurationMinutes: true,

@@ -19,6 +19,7 @@ export async function POST(req:Request) {
             data: {
                 gymId:          session.gymId,
                 name:           data.name || `Untitled draft ${crypto.randomUUID()}`,
+                icon: data.icon, color: data.color, category: data.category,
                 shortDesc:      data.shortDesc,
                 longDesc:       data.longDesc,
                 basePriceMinor: data.basePriceMinor,

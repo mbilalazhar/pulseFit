@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { PlanIcon } from "@/components/plan-icon"
 import { Loader2Icon } from "lucide-react"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -46,12 +47,15 @@ export function PlanActions() {
             </DialogDescription>
           </DialogHeader>
           {pendingChanges && (
+            <div className="space-y-3">
+            <div className="flex items-center gap-3"><PlanIcon icon={pendingChanges.icon} color={pendingChanges.color} /><div><p className="break-words text-sm font-semibold">{pendingChanges.name || "Untitled draft"}</p><p className="text-xs text-muted-foreground">{pendingChanges.category}</p></div></div>
             <dl className="grid grid-cols-2 gap-2 rounded-xl bg-muted/40 p-4 text-sm">
               <dt className="text-muted-foreground">Monthly price</dt>
               <dd className="text-right font-medium">{pendingChanges.currency} {(pendingChanges.basePriceMinor / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</dd>
               <dt className="text-muted-foreground">Status</dt>
               <dd className="text-right font-medium capitalize">{pendingChanges.status.toLowerCase()}</dd>
             </dl>
+            </div>
           )}
           <DialogFooter>
             <DialogClose render={<Button variant="outline" disabled={isSubmitting} />}>

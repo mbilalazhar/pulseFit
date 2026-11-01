@@ -20,6 +20,7 @@ model Gym {
   trainers            Trainer[]
   memberSubscriptions MemberSubscription[]
   payments            Payment[]
+  expenses            Expense[]
   attendance          Attendance[]
   assignments         MemberTrainerAssignment[]
   trainingSessions    TrainingSession[]

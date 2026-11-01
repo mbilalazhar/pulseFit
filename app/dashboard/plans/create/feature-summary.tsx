@@ -1,15 +1,17 @@
 "use client"
 
+import { PlanIcon } from "@/components/plan-icon"
 import { Check, Clock3 } from "lucide-react"
 import { buildPlanFeatures } from "@/lib/plan-features"
 import { usePlanForm } from "./plan-form-context"
 
 export function FeatureSummary() {
-  const { facilities, customFeatures, maxHoursPerDay, guidanceIncluded, sessionsPerWeek, sessionDurationMinutes } = usePlanForm()
+  const { planName, icon, color, category, facilities, customFeatures, maxHoursPerDay, guidanceIncluded, sessionsPerWeek, sessionDurationMinutes } = usePlanForm()
   const features = buildPlanFeatures(facilities, customFeatures)
 
   return (
     <section aria-labelledby="feature-summary-heading" className="space-y-4 rounded-2xl border bg-card p-5">
+      <div className="flex items-center gap-3 border-b pb-4"><PlanIcon icon={icon} color={color} /><div className="min-w-0"><p className="break-words font-heading text-base font-bold">{planName.trim() || "Your plan name"}</p><p className="text-xs text-muted-foreground">{category}</p></div></div>
       <h2 id="feature-summary-heading" className="font-heading text-base font-semibold">Feature Summary</h2>
       <div className="flex items-start gap-2 text-sm">
         <Clock3 className="mt-0.5 size-4 shrink-0 text-muted-foreground" />

@@ -13,12 +13,15 @@ import { toast } from "sonner"
 import {
   createTrainer,
   updateTrainer,
-  type CreateTrainerPayload,
+  ScheduleReviewRequiredError,
+  type UpdateTrainerPayload,
   type ContractorPaymentType,
   type TrainerShift,
 } from "@/lib/services/trainer.services"
 import { trainerScheduleFields, type TrainerFormData } from "@/lib/trainer-form-data"
 import { WORKING_DAYS, timeToMinutes, endTimeToMinutes, trainerAvailabilitySchema, contractorSessionsSchema } from "@/lib/trainer-availability"
+import type { ScheduleChangeReview } from "@/lib/trainer-schedule-change"
+import { ScheduleReassignmentDialog } from "./schedule-reassignment-dialog"
 
 /* ---------- types ---------- */
 
@@ -150,6 +153,7 @@ export function useTrainerForm() {
 export function TrainerFormProvider({ children, initialTrainer }: { children: ReactNode; initialTrainer?: TrainerFormData }) {
   const router = useRouter()
   const queryClient = useQueryClient()
+  const [scheduleReview, setScheduleReview] = useState<{ payload: UpdateTrainerPayload; review: ScheduleChangeReview; error: string } | null>(null)
 
   const [fullName, setFullName] = useState(initialTrainer?.fullName ?? "")
   const [email, setEmail] = useState(initialTrainer?.email ?? "")
@@ -234,15 +238,24 @@ export function TrainerFormProvider({ children, initialTrainer }: { children: Re
     setCertifications((prev) => prev.filter((c) => c.id !== id))
 
   const mutation = useMutation({
-    mutationFn: (payload: CreateTrainerPayload) => initialTrainer ? updateTrainer(initialTrainer.id, payload) : createTrainer(payload),
+    mutationFn: (payload: UpdateTrainerPayload) => initialTrainer ? updateTrainer(initialTrainer.id, payload) : createTrainer(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["trainers"] })
-      if (initialTrainer) queryClient.invalidateQueries({ queryKey: ["trainer-schedule", initialTrainer.id] })
+      if (initialTrainer) {
+        queryClient.invalidateQueries({ queryKey: ["trainer-schedule"] })
+        queryClient.invalidateQueries({ queryKey: ["members"] })
+      }
+      setScheduleReview(null)
       toast.success(initialTrainer ? "Trainer updated successfully." : "Trainer created successfully.")
       router.push(initialTrainer ? `/dashboard/trainers/${initialTrainer.id}` : "/dashboard/trainers")
       router.refresh()
     },
-    onError: (error: Error) => {
+    onError: (error: Error, payload) => {
+      if (error instanceof ScheduleReviewRequiredError) {
+        setScheduleReview({ payload, review: error.review, error: payload.scheduleConfirmation ? error.message : "" })
+        return
+      }
+      setScheduleReview((current) => current ? { ...current, error: error.message } : null)
       toast.error(error.message)
     },
   })
@@ -401,6 +414,14 @@ export function TrainerFormProvider({ children, initialTrainer }: { children: Re
   return (
     <TrainerFormContext.Provider value={value}>
       {children}
+      {scheduleReview && <ScheduleReassignmentDialog
+        key={scheduleReview.review.revision}
+        review={scheduleReview.review}
+        error={scheduleReview.error}
+        saving={mutation.isPending}
+        onClose={() => { if (!mutation.isPending) setScheduleReview(null) }}
+        onConfirm={(scheduleConfirmation) => mutation.mutate({ ...scheduleReview.payload, scheduleConfirmation })}
+      />}
     </TrainerFormContext.Provider>
   )
 }

@@ -21,8 +21,8 @@ test("builds live names, purchased price, trainer, dates and payment balance", (
   assert.equal(members[0].payment, "Partial")
   assert.equal(members[0].balanceMinor, 50000)
   assert.equal(members[0].endDate, "2026-10-31")
-  assert.equal(members[0].expiringSoon, true)
-  assert.deepEqual(stats, { total: 1, active: 1, activePercent: 100, newThisMonth: 1, newLastMonth: 0, expiring: 1 })
+  assert.equal(members[0].expiringSoon, false)
+  assert.deepEqual(stats, { total: 1, active: 1, activePercent: 100, newThisMonth: 1, newLastMonth: 0, expiring: 0 })
 })
 
 test("activates a scheduled member on the gym's current date and preserves frozen status", () => {
@@ -32,7 +32,7 @@ test("activates a scheduled member on the gym's current date and preserves froze
     record({ status: "FROZEN" }),
   ], "Asia/Karachi", now)
   assert.deepEqual(members.map((member) => member.status), ["Active", "Inactive", "Frozen"])
-  assert.deepEqual(members.map((member) => member.expiringSoon), [true, false, false])
+  assert.deepEqual(members.map((member) => member.expiringSoon), [false, false, false])
 })
 
 test("empty gyms return zero stats and legacy records do not invent prices or payment status", () => {
@@ -55,11 +55,11 @@ test("calculates paid, pending and free memberships from saved charges and payme
   assert.deepEqual(members.map((member) => member.payment), ["Paid", "Pending", "Paid"])
 })
 
-test("uses calendar-month boundaries and an inclusive 30-day expiry window", () => {
+test("uses calendar-month boundaries and an inclusive 10-day expiry window", () => {
   const base = record()
   const { stats } = buildMemberDirectory([
-    record({ createdAt: new Date("2026-09-30T19:00:00Z"), subscriptions: [{ ...base.subscriptions[0], endDate: new Date("2026-11-17") }] }),
-    record({ createdAt: new Date("2026-09-30T18:59:59Z"), subscriptions: [{ ...base.subscriptions[0], endDate: new Date("2026-11-18") }] }),
+    record({ createdAt: new Date("2026-09-30T19:00:00Z"), subscriptions: [{ ...base.subscriptions[0], endDate: new Date("2026-10-28") }] }),
+    record({ createdAt: new Date("2026-09-30T18:59:59Z"), subscriptions: [{ ...base.subscriptions[0], endDate: new Date("2026-10-29") }] }),
     record({ createdAt: new Date("2026-08-01"), subscriptions: [{ ...base.subscriptions[0], endDate: new Date("2026-10-17") }] }),
   ], "Asia/Karachi", now)
   assert.equal(stats.newThisMonth, 1)
@@ -85,6 +85,6 @@ test("a newer scheduled renewal cannot replace the active subscription's price a
   assert.equal(member.startDate, "2026-10-01")
   assert.equal(member.endDate, "2026-10-31")
   assert.equal(member.priceMinor, 90000)
-  assert.equal(member.expiringSoon, true)
+  assert.equal(member.expiringSoon, false)
   assert.equal(member.balanceMinor, 170000)
 })

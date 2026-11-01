@@ -65,3 +65,23 @@ test("rejects non-admin users and invalid feature limits before writing", async 
   assert.equal((await post({ ...input, features: [{ label: " " }] })).status, 400)
   assert.equal(create.mock.callCount(), 0)
 })
+
+test("persists freely combined plan icons, colors and categories with safe defaults", async () => {
+  assert.equal((await post({ ...input, icon: "gem", color: "teal", category: "Medium" })).status, 201)
+  const saved = create.mock.calls[0].arguments[0].data
+  assert.equal(saved.icon, "gem")
+  assert.equal(saved.color, "teal")
+  assert.equal(saved.category, "Medium")
+  assert.equal((await post(input)).status, 201)
+  const defaults = create.mock.calls[1].arguments[0].data
+  assert.equal(defaults.icon, "dumbbell")
+  assert.equal(defaults.color, "blue")
+  assert.equal(defaults.category, "Basic")
+})
+
+test("rejects unsupported appearance values before saving a plan", async () => {
+  for (const change of [{ icon: "unknown" }, { color: "#ffffff" }, { category: "unknown" }]) {
+    assert.equal((await post({ ...input, ...change })).status, 400)
+  }
+  assert.equal(create.mock.callCount(), 0)
+})

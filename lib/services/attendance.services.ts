@@ -1,6 +1,6 @@
 import type { AttendanceData } from "@/lib/attendance"
 
-export type AttendanceAction = { action: "present"; memberId: string } | { action: "left"; attendanceId: string }
+export type AttendanceAction = { action: "present"; memberId: string } | { action: "left" | "leave"; attendanceId: string }
 
 async function read<T>(response: Response): Promise<T> {
   const data = await response.json().catch(() => null)

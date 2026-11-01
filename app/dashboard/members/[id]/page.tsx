@@ -1,7 +1,8 @@
 import Image from "next/image"
 import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
-import { ArrowDown, ArrowLeft, ArrowUp, CalendarDays, ChartNoAxesColumnIncreasing, CircleCheck, Clock3, CreditCard, FileText, Flame, Mail, Phone, Target, Users } from "lucide-react"
+import { ArrowDown, ArrowLeft, ArrowUp, CalendarDays, ChartNoAxesColumnIncreasing, CircleCheck, Clock3, CreditCard, FileText, Flame, Mail, Pencil, Phone, Target, Users } from "lucide-react"
+import { DashboardHeaderButton } from "@/components/dashboard-header-button"
 import defaultAvatar from "@/assets/User_Default.png"
 import { cn } from "@/lib/utils"
 import { getSession } from "@/lib/auth"
@@ -48,9 +49,10 @@ export default async function MemberDetailsPage({ params }: PageProps<"/dashboar
   const lastPayment = subscription?.payments[0]
 
   return <div className="mx-auto w-full max-w-[1600px] space-y-5">
-    <header className="flex items-start gap-3">
+    <header className="flex flex-wrap items-start gap-3">
       <Link href="/dashboard/members" aria-label="Back to members" className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-border bg-card transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-accent"><ArrowLeft className="size-4" /></Link>
-      <div><h1 className="font-heading text-2xl font-bold tracking-tight">Member Details</h1><p className="mt-1 text-sm text-muted-foreground">View member information, attendance, progress and more.</p></div>
+      <div className="flex-1"><h1 className="font-heading text-2xl font-bold tracking-tight">Member Details</h1><p className="mt-1 text-sm text-muted-foreground">View member information, attendance, progress and more.</p></div>
+      <DashboardHeaderButton href={`/dashboard/members/${member.id}/edit`} icon={Pencil} text="Edit Member" bgColor="primary" />
     </header>
 
     <section aria-label="Member profile" className={cn(panel, "grid gap-5 md:grid-cols-2 xl:grid-cols-[minmax(260px,1.3fr)_1fr_1fr_minmax(230px,1.05fr)]")}>

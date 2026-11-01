@@ -60,7 +60,7 @@ export type MemberStats = {
 export function buildMemberDirectory(records: MemberDirectoryRecord[], timeZone: string, now = new Date()) {
   const today = dateInTimeZone(timeZone, now)
   const horizon = new Date(`${today}T00:00:00Z`)
-  horizon.setUTCDate(horizon.getUTCDate() + 30)
+  horizon.setUTCDate(horizon.getUTCDate() + 10)
   const endOfWindow = horizon.toISOString().slice(0, 10)
   const thisMonth = today.slice(0, 7)
   const previousMonth = new Date(`${thisMonth}-01T00:00:00Z`)

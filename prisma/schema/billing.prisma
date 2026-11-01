@@ -77,3 +77,26 @@ model Payment {
   @@index([gymId, memberId, paidAt])
   @@index([memberSubscriptionId])
 }
+
+enum ExpenseStatus {
+  PAID
+  PENDING
+}
+
+model Expense {
+  id               String        @id @default(cuid())
+  gymId            String
+  title            String
+  category         String
+  amountMinor      Int
+  currency         String        @default("PKR")
+  date             DateTime      @db.Date
+  status           ExpenseStatus
+  method           String
+  recordedByUserId  String
+  createdAt        DateTime      @default(now())
+  gym              Gym           @relation(fields: [gymId], references: [id])
+
+  @@index([gymId, date])
+  @@index([gymId, status])
+}
